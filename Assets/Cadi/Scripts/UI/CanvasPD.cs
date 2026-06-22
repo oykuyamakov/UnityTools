@@ -1,0 +1,34 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using Cadi.Scripts.CacherSystem;
+using Sirenix.OdinInspector;
+using Sirenix.Utilities;
+using UnityEngine;
+
+namespace Cadi.Scripts.UI
+{
+    public class CanvasPD : CacherMonoBehaviour
+    {
+        [SerializeField, ReadOnly] [ListDrawerSettings(
+            DraggableItems = false,
+            HideAddButton = true,
+            HideRemoveButton = true,
+            ListElementLabelName = nameof(CanvasOrderPolice.GetHighestOrder), DefaultExpandedState = true
+        )]
+        private List<CanvasOrderPolice> m_Polices;
+
+        public override void ResolveReferences()
+        {
+            base.ResolveReferences();
+            Refresh();
+        }
+
+        [Button]
+        public void Refresh()
+        {
+            var polices = GameObject.FindObjectsByType<CanvasOrderPolice>(sortMode: FindObjectsSortMode.None);
+            m_Polices = polices.OrderBy(c => c.GetHighestOrder()).ToList();
+        }
+    }
+}
