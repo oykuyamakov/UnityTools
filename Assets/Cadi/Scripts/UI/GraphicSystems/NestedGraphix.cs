@@ -1,6 +1,7 @@
-using System;
 using Cadi.Scripts.UI.Extensions;
+#if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
+#endif
 using UnityEngine;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
@@ -9,15 +10,22 @@ namespace Cadi.Scripts.UI.GraphicSystems
 {
     public class NestedGraphix : Graphix
     {
-        [SerializeField, FoldoutGroup("Settings"), ShowIf(nameof(ShowSettings))]
+#if ODIN_INSPECTOR
+        [FoldoutGroup("Settings"), ShowIf(nameof(ShowSettings))]
+#endif
+        [SerializeField]
         protected IsNested m_Mode;
 
-        [FormerlySerializedAs("m_ContentPadding")]
-        [SerializeField, FoldoutGroup("Settings"), ShowIf(nameof(ShowSettings))]
+#if ODIN_INSPECTOR
+        [FoldoutGroup("Settings"), ShowIf(nameof(ShowSettings))]
+#endif
+        [SerializeField]
         protected float m_TargetContentPadding = 25f;
-
-        [SerializeField, FoldoutGroup("Settings"), ShowIf(nameof(ShowChildSlot))]
+#if ODIN_INSPECTOR
+        [FoldoutGroup("Settings"), ShowIf(nameof(ShowChildSlot))]
         [InlineProperty, LabelText("Child Slot")]
+#endif
+        [SerializeField]
         protected Slot m_ChildSlot = new();
 
         [SerializeField, HideInInspector]

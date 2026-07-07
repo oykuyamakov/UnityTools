@@ -72,29 +72,24 @@ namespace Cadi.Scripts.UI
 
 
 #if UNITY_EDITOR
-        // private void OnValidate()
-        // {
-        //     Refresh();
-        // }
-
         private static void EnsureAssetExists(UIContent content)
         {
             const string folderPath = "Assets/Resources/Content";
 
-            if (!UnityEditor.AssetDatabase.IsValidFolder("Assets/Resources"))
+            if (!AssetDatabase.IsValidFolder("Assets/Resources"))
             {
-                UnityEditor.AssetDatabase.CreateFolder("Assets", "Resources");
+                AssetDatabase.CreateFolder("Assets", "Resources");
             }
 
-            if (!UnityEditor.AssetDatabase.IsValidFolder(folderPath))
+            if (!AssetDatabase.IsValidFolder(folderPath))
             {
                 Debug.Log(folderPath);
-                UnityEditor.AssetDatabase.CreateFolder("Assets/Resources", "Content");
+                AssetDatabase.CreateFolder("Assets/Resources", "Content");
             }
 
-            UnityEditor.AssetDatabase.CreateAsset(content, "Assets/Resources/" + c_AssetResourcePath + ".asset");
-            UnityEditor.AssetDatabase.SaveAssets();
-            UnityEditor.AssetDatabase.Refresh();
+            AssetDatabase.CreateAsset(content, "Assets/Resources/" + c_AssetResourcePath + ".asset");
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
         }
 
         private static void EnsureFolderExists(string folderPath)

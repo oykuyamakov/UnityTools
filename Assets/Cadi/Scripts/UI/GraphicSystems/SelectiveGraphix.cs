@@ -1,6 +1,7 @@
 using Cadi.Scripts.EventSystem;
-using Cadi.Scripts.UI;
+#if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
+#endif
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -8,8 +9,11 @@ namespace Cadi.Scripts.UI.GraphicSystems
 {
     public class SelectiveGraphix : Graphix, IPointerDownHandler, ISelectiveGraphix
     {
-        [SerializeField, FoldoutGroup("Settings/Selection")]
+        [SerializeField]
+#if ODIN_INSPECTOR
+         [FoldoutGroup("Settings/Selection")]
         [InlineProperty, LabelText("Selection")][ShowIf(nameof(ShowSettings))]
+#endif
         private SelectionController m_Selection = new();
 
         private bool m_ShowSettings;

@@ -1,8 +1,4 @@
-using System;
 using System.Collections;
-using System.Linq;
-using Sirenix.OdinInspector;
-using Sirenix.Utilities;
 using UnityEngine;
 using UnityEngine.UI;
 

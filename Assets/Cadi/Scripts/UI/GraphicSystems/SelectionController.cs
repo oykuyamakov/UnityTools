@@ -1,12 +1,17 @@
 using System;
 using Cadi.Scripts.EventSystem;
 using Cadi.Scripts.UI.FX;
+#if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
+#endif
 using UnityEngine;
 
 namespace Cadi.Scripts.UI.GraphicSystems
 {
-    [Serializable, InlineProperty]
+    [Serializable]
+#if ODIN_INSPECTOR
+    [InlineProperty]
+#endif
     public class SelectionController
     {
         [SerializeField, HideInInspector]

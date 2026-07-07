@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace CadiKazani.Scripts.Utility.Extensions
+namespace Cadi.Scripts.Utility.Extensions
 {
     public static class Vector3Extensions
     {

@@ -3,12 +3,15 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+#if ODIN_INSPECTOR
 using Sirenix.OdinInspector.Editor;
+#endif
 using UnityEditor;
 using UnityEngine;
 
 namespace Cadi.Scripts.CacherSystem.Editor
 {
+#if ODIN_INSPECTOR
     // -----------------------------------------------------------------------
     // Attribute processor: automatically hides [CachedField] properties from
     // Odin's main tree so they only appear in the custom cached foldout.
@@ -83,7 +86,8 @@ namespace Cadi.Scripts.CacherSystem.Editor
 
                     m_ShowMeta = GUILayout.Toggle(m_ShowMeta, s_ShowMeta, EditorStyles.miniButton);
 
-                    using (new EditorGUI.DisabledScope(targets.Length != 1 && serializedObject.isEditingMultipleObjects))
+                    using (new EditorGUI.DisabledScope(targets.Length != 1 &&
+                                                       serializedObject.isEditingMultipleObjects))
                     {
                         if (GUILayout.Button(s_ResolveNow, EditorStyles.miniButton))
                         {
@@ -107,7 +111,8 @@ namespace Cadi.Scripts.CacherSystem.Editor
                     string msg = string.Join("\n• ", warnings);
                     EditorGUILayout.HelpBox("CachedField configuration warnings:\n• " + msg, MessageType.Warning);
 
-                    Debug.LogWarning($"{type.Name} has {warnings.Count} CachedField configuration warnings. See Inspector for details.");
+                    Debug.LogWarning(
+                        $"{type.Name} has {warnings.Count} CachedField configuration warnings. See Inspector for details.");
 
                     EditorGUILayout.Space(4);
                 }
@@ -202,7 +207,9 @@ namespace Cadi.Scripts.CacherSystem.Editor
         {
             EditorGUILayout.LabelField(
                 $"Search: {attr.Search} | IncludeInactive: {attr.IncludeInactive} | Required: {attr.Required} | AddIfMissing: {attr.AddComponentIfMissing}" +
-                (string.IsNullOrEmpty(attr.AddComponentIfMissingBoundToBoolField) ? "" : $" | AddIfMissingBool: {attr.AddComponentIfMissingBoundToBoolField}"),
+                (string.IsNullOrEmpty(attr.AddComponentIfMissingBoundToBoolField)
+                    ? ""
+                    : $" | AddIfMissingBool: {attr.AddComponentIfMissingBoundToBoolField}"),
                 EditorStyles.miniLabel);
         }
 
@@ -218,13 +225,15 @@ namespace Cadi.Scripts.CacherSystem.Editor
 
             if (value is IList list)
             {
-                EditorGUILayout.LabelField(label, $"{field.FieldType.Name} (Count: {list.Count})", EditorStyles.miniLabel);
+                EditorGUILayout.LabelField(label, $"{field.FieldType.Name} (Count: {list.Count})",
+                    EditorStyles.miniLabel);
                 return;
             }
 
             if (value is Array arr)
             {
-                EditorGUILayout.LabelField(label, $"{field.FieldType.Name} (Length: {arr.Length})", EditorStyles.miniLabel);
+                EditorGUILayout.LabelField(label, $"{field.FieldType.Name} (Length: {arr.Length})",
+                    EditorStyles.miniLabel);
                 return;
             }
 
@@ -295,13 +304,15 @@ namespace Cadi.Scripts.CacherSystem.Editor
 
                 if (!isSerializedByUnity)
                 {
-                    warnings.Add($"'{f.DeclaringType.Name}.{f.Name}' is [CachedField] but not serialized. Add [SerializeField] (or make it public).");
+                    warnings.Add(
+                        $"'{f.DeclaringType.Name}.{f.Name}' is [CachedField] but not serialized. Add [SerializeField] (or make it public).");
                 }
 
                 Type declaring = f.DeclaringType;
                 if (f.IsPrivate && declaring != null && !declaring.IsSealed)
                 {
-                    warnings.Add($"'{declaring.Name}.{f.Name}' is private and [CachedField] on a non-sealed class. Derived types will not resolve this field with the current resolver. Make it protected (recommended) or seal '{declaring.Name}', or update resolver to walk base types.");
+                    warnings.Add(
+                        $"'{declaring.Name}.{f.Name}' is private and [CachedField] on a non-sealed class. Derived types will not resolve this field with the current resolver. Make it protected (recommended) or seal '{declaring.Name}', or update resolver to walk base types.");
                 }
             }
 
@@ -309,5 +320,7 @@ namespace Cadi.Scripts.CacherSystem.Editor
             return warnings;
         }
     }
+#endif
+
 }
 #endif

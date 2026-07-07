@@ -1,7 +1,11 @@
 using System;
-using _App.Scripts.Utility.UI;
+using Cadi.Scripts.UI.FX;
+#if CADI_DOTWEEN
 using DG.Tweening;
+#endif
+#if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
+#endif
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -26,58 +30,45 @@ namespace Cadi.Scripts.UI.GraphicSystems
     }
 
     [Serializable]
+#if ODIN_INSPECTOR
     [InlineProperty(LabelWidth = 68)]
+#endif
     public class SlotConfig
     {
         [SerializeField]
-        [PropertyOrder(0)]
-        [HorizontalGroup("TypeRow", Width = 165)]
-        [LabelText("Type")]
-        [LabelWidth(40)]
-        [EnumToggleButtons]
-        [PropertySpace(0, 4)]
+#if ODIN_INSPECTOR
+        [PropertyOrder(0),HorizontalGroup("TypeRow", Width = 165),[LabelText("Type"),LabelWidth(40),EnumToggleButtons,PropertySpace(0, 4)]
+#endif
         protected GraphicType m_Type = GraphicType.Image;
 
         [SerializeField]
-        [PropertyOrder(1)]
-        [HorizontalGroup("ColorRow", Width = 115)]
-        [LabelText("Default")]
-        [LabelWidth(58)]
-        [PropertySpace(0, 6)]
+#if ODIN_INSPECTOR
+        [PropertyOrder(1),HorizontalGroup("ColorRow", Width = 115),LabelText("Default"),LabelWidth(58),PropertySpace(0, 6)]
+#endif
         protected Color m_DefaultColor = Color.white;
 
         [SerializeField]
-        [PropertyOrder(1)]
-        [HorizontalGroup("ColorRow", Width = 120)]
-        [LabelText("Selected")]
-        [LabelWidth(62)]
-        [PropertySpace(0, 6)]
+#if ODIN_INSPECTOR
+        [PropertyOrder(1),HorizontalGroup("ColorRow", Width = 120),LabelText("Selected"),LabelWidth(62),PropertySpace(0, 6)]
+#endif
         protected Color m_SelectedColor = Color.white;
 
         [SerializeField]
-        [PropertyOrder(2)]
-        [ToggleGroup(nameof(m_UseOutline), "Outline")]
-        [PropertySpace(4, 2)]
+#if ODIN_INSPECTOR
+        [PropertyOrder(2),ToggleGroup(nameof(m_UseOutline), "Outline"),PropertySpace(4, 2)]
+#endif
         protected bool m_UseOutline = false;
 
         [SerializeField]
-        [PropertyOrder(3)]
-        [ToggleGroup(nameof(m_UseOutline))]
-        [HorizontalGroup(nameof(m_UseOutline) + "/Row", Width = 115)]
-        [LabelText("Color")]
-        [LabelWidth(42)]
-        [PropertySpace(3, 0)]
+#if ODIN_INSPECTOR
+        [PropertyOrder(3),ToggleGroup(nameof(m_UseOutline)),HorizontalGroup(nameof(m_UseOutline) + "/Row", Width = 115),LabelText("Color"),LabelWidth(42),PropertySpace(3, 0)]
+#endif
         protected Color m_OutlineColor = Color.black;
 
-        [SerializeField]
-        [PropertyOrder(3)]
-        [ToggleGroup(nameof(m_UseOutline))]
-        [HorizontalGroup(nameof(m_UseOutline) + "/Row", Width = 190)]
-        [LabelText("Width")]
-        [LabelWidth(45)]
-        [Range(0f, 30f)]
-        [SuffixLabel("px", Overlay = true)]
-        [PropertySpace(3, 0)]
+        [SerializeField, Range(0f, 30f)]
+#if ODIN_INSPECTOR
+        [PropertyOrder(3),ToggleGroup(nameof(m_UseOutline)),HorizontalGroup(nameof(m_UseOutline) + "/Row", Width = 190),LabelText("Width"),LabelWidth(45),SuffixLabel("px", Overlay = true),PropertySpace(3, 0)]
+#endif
         protected float m_OutlineWidth = 2f;
         
         public virtual Color DefaultColor
@@ -118,7 +109,10 @@ namespace Cadi.Scripts.UI.GraphicSystems
 
     }
 
-    [Serializable, InlineProperty]
+    [Serializable]
+#if ODIN_INSPECTOR
+    [InlineProperty]
+#endif
     public class Slot : SlotConfig
     {
         [SerializeField, HideInInspector]
@@ -126,9 +120,10 @@ namespace Cadi.Scripts.UI.GraphicSystems
 
         [SerializeField, HideInInspector]
         private UIOutline m_Outline;
-
+#if CADI_DOTWEEN
         [NonSerialized]
         private Tweener m_Tween;
+#endif
 
         // -----------------------------------------------------------
         // Properties
@@ -204,9 +199,10 @@ namespace Cadi.Scripts.UI.GraphicSystems
         {
             if (m_Graphic == null)
                 return;
-
+#if CADI_DOTWEEN
             m_Tween?.Kill();
             m_Tween = m_Graphic.DOColor(color, duration);
+#endif
         }
 
         // -----------------------------------------------------------
@@ -282,8 +278,11 @@ namespace Cadi.Scripts.UI.GraphicSystems
 
         public void Dispose()
         {
+#if CADI_DOTWEEN
+            
             m_Tween?.Kill();
             m_Tween = null;
+#endif
         }
     }
 }

@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 using Cadi.Scripts.CustomAttributes;
-using CadiKazani.Scripts.Utility.Extensions;
+using Cadi.Scripts.Utility.Extensions;
 using UnityEngine;
 
 namespace Cadi.Scripts.Utility.GameObjectHelpers

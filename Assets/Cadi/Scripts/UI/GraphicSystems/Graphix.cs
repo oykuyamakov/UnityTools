@@ -1,7 +1,9 @@
-using _App.Scripts.Utility.UI;
 using Cadi.Scripts.CacherSystem;
 using Cadi.Scripts.UI.Extensions;
+using Cadi.Scripts.UI.FX;
+#if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
+#endif
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,8 +11,11 @@ namespace Cadi.Scripts.UI.GraphicSystems
 {
     public class Graphix : CacherMonoBehaviour
     {
-        [SerializeField, FoldoutGroup("Settings"), ShowIf(nameof(ShowSlot))]
+#if ODIN_INSPECTOR
+        [FoldoutGroup("Settings"), ShowIf(nameof(ShowSlot))]
         [InlineProperty, LabelText("Root Slot")]
+#endif
+        [SerializeField]
         protected Slot m_Slot = new();
 
         [CachedField, SerializeField, HideInInspector]
@@ -88,76 +93,6 @@ namespace Cadi.Scripts.UI.GraphicSystems
             m_Slot.Dispose();
         }
 
-        // // -----------------------------------------------------------
-        // // Properties
-        // // -----------------------------------------------------------
-        //
-        // public virtual Slot Target => m_Slot;
-        // public virtual IsNested IsNested => IsNested.Single;
-        // public virtual SlotLoc SlotLocIs => SlotLoc.This;
-        //
-        // public RectTransform CachedRectTransform => m_RectTransform;
-        // public bool ContentSet { get; protected set; }
-        // protected virtual bool ShowSettings => true;
-        // protected virtual bool ShowSlot => ShowSettings;
-        // protected virtual float ContentPadding => 0;
-        //
-        // public virtual Slot GetSlot(SlotLoc slotLoc) => Target;
-        //
-        // // -----------------------------------------------------------
-        // // Content helpers (virtual — overridden by NestedGraphix)
-        // // -----------------------------------------------------------
-        //
-        // public virtual void SetSlotGraphic(Sprite content, bool preserveAspect, bool fullStretch, SlotLoc slotLocToSet = SlotLoc.This)
-        // {
-        //     var slot = GetSlot(slotLocToSet);
-        //     
-        //     slot.SetSprite(content);
-        //     ContentSet = true;
-        //
-        //     if (slot.Graphic is Image img)
-        //     {
-        //         var rc = img.rectTransform;
-        //         if (preserveAspect)
-        //         {
-        //             img.preserveAspect = true;
-        //             if (fullStretch)
-        //             {
-        //                 rc.SetFullStretch(ContentPadding);
-        //             }
-        //             else
-        //             {
-        //                 img.SetNativeSize();
-        //                 rc.anchorMin = new Vector2(0.5f, 0.5f);
-        //                 rc.anchorMax = new Vector2(0.5f, 0.5f);
-        //                 rc.anchoredPosition = Vector2.zero;
-        //             }
-        //         }
-        //         else
-        //         {
-        //             img.preserveAspect = false;
-        //             rc.SetFullStretch(ContentPadding);
-        //         }
-        //     }
-        // }
-        //
-        // public virtual void SetSlotGraphic(Texture text, SlotLoc slotLocToSet = SlotLoc.This)
-        // {
-        //     var slot = GetSlot(slotLocToSet);
-        //     
-        //     slot.SetTexture(text);
-        //     ContentSet = true;
-        // }
-        //
-        // // -----------------------------------------------------------
-        // // Lifecycle
-        // // -----------------------------------------------------------
-        //
-        // protected virtual void OnDestroy()
-        // {
-        //     Target.Dispose();
-        // }
-
         // -----------------------------------------------------------
         // Editor
         // -----------------------------------------------------------
@@ -190,10 +125,12 @@ namespace Cadi.Scripts.UI.GraphicSystems
         {
             EditorSync();
         }
-
+#if ODIN_INSPECTOR
+        
         [Button("Refresh"), PropertyOrder(100)]
         [FoldoutGroup("Settings")]
         [ShowIf(nameof(ShowSettings))]
+#endif
         private void EditorRefresh()
         {
             EditorSync();

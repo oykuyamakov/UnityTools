@@ -1,10 +1,12 @@
 ﻿#nullable enable
 using System;
-using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;
+#if CADI_DOTWEEN
+using DG.Tweening;
+#endif
 
 namespace Cadi.Scripts.UI.Extensions
 {
@@ -121,12 +123,14 @@ namespace Cadi.Scripts.UI.Extensions
                 img.SetAlpha(0f);
                 img.gameObject.SetActive(true);
             }
+#if CADI_DOTWEEN
 
             img.DOFade(enable, duration).OnComplete(() =>
             {
                 if (enable <= 0f)
                     img.gameObject.SetActive(false);
             });
+#endif
         }
 
 
@@ -332,6 +336,8 @@ namespace Cadi.Scripts.UI.Extensions
             rt.localRotation = Quaternion.identity;
         }
 
+        
+#if CADI_DOTWEEN
         public static Sequence RevealImagesThen(Action onComplete, float revealDuration, params Image[] images)
         {
             Sequence seq = DOTween.Sequence();
@@ -399,5 +405,7 @@ namespace Cadi.Scripts.UI.Extensions
                 .OnUpdate(() => { tmp.text = format != null ? format(value) : value.ToString(); })
                 .OnComplete(() => { tmp.text = format != null ? format(to) : to.ToString(); });
         }
+        
+#endif
     }
 }

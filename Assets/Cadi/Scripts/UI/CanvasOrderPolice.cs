@@ -1,32 +1,36 @@
 using System.Collections.Generic;
 using System.Linq;
 using Cadi.Scripts.CacherSystem;
+#if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
 using Sirenix.Utilities;
+#endif
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace Cadi.Scripts.UI
 {
-    [RequireComponent(typeof(CanvasGroup))][RequireComponent(typeof(Canvas))][DisallowMultipleComponent]
+    [RequireComponent(typeof(CanvasGroup))]
+    [RequireComponent(typeof(Canvas))]
+    [DisallowMultipleComponent]
     public class CanvasOrderPolice : CacherMonoBehaviour
     {
-        [CachedField,SerializeField]
+        [CachedField, SerializeField]
         protected Canvas m_SelfCanvas;
-        
-        [CachedField,SerializeField]
+
+        [CachedField, SerializeField]
         protected Canvas m_CanvasGroup;
-        
+
         [SerializeField]
         [CachedField(RefSearch.Children, includeInactive: true, required: false)]
         protected List<Canvas> m_CanvasRefs = new();
-        
+#if ODIN_INSPECTOR
         [ListDrawerSettings(
             DraggableItems = true,
             HideAddButton = true,
             HideRemoveButton = true,
             ListElementLabelName = nameof(CanvasOrderItem.Label)
         )][OnValueChanged(nameof(SortListByCurrentSortingOrder))][SerializeField]
+#endif
         protected List<CanvasOrderItem> m_Canvases = new();
 
         public IReadOnlyList<Canvas> CanvasRefs => m_CanvasRefs;
@@ -50,7 +54,7 @@ namespace Cadi.Scripts.UI
                 .ThenBy(c => c.transform.GetSiblingIndex())
                 .ToList();
 
-            if (m_Canvases.IsNullOrEmpty() || m_Canvases.Count != orderedCanvases.Count)
+            if (m_Canvases == null || m_Canvases.Count != orderedCanvases.Count)
             {
                 m_Canvases = new List<CanvasOrderItem>();
                 foreach (var canvas in orderedCanvases)
@@ -71,7 +75,7 @@ namespace Cadi.Scripts.UI
             }
         }
     }
-    
+
     [System.Serializable]
     public class CanvasOrderItem
     {
@@ -79,13 +83,16 @@ namespace Cadi.Scripts.UI
         {
             m_Canvas = canvas;
         }
-        
+#if ODIN_INSPECTOR
         [SerializeField][InlineProperty][ReadOnly]
+#endif
         private Canvas m_Canvas;
-        
-        public Canvas Canvas => m_Canvas;
 
+        public Canvas Canvas => m_Canvas;
+#if ODIN_INSPECTOR
         [ShowInInspector, ReadOnly, InlineProperty]
+#endif
+
         public int SortingOrder => m_Canvas != null ? m_Canvas.sortingOrder : 0;
 
         public void SetSortingOrder(int order)

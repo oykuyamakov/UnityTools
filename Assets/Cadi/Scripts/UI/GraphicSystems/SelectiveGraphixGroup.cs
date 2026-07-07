@@ -1,9 +1,14 @@
 using System;
 using System.Collections.Generic;
 using Cadi.Scripts.CacherSystem;
+using Cadi.Scripts.CustomAttributes;
 using Cadi.Scripts.EventSystem;
 using Cadi.Scripts.UI.FX;
+
+#if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
+#endif
+
 using UnityEngine;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
@@ -12,50 +17,77 @@ namespace Cadi.Scripts.UI.GraphicSystems
 {
     public class SelectiveGraphixGroup : CacherMonoBehaviour
     {
-        [SerializeField, FoldoutGroup("Settings"), OnValueChanged(nameof(OnSettingsChanged))]
-        [ShowIf(nameof(m_IsNested), IsNested.Nested)]
+        [SerializeField, ShowIf(nameof(m_IsNested), (int)IsNested.Nested)]
+#if ODIN_INSPECTOR
+        [FoldoutGroup("Settings"), OnValueChanged(nameof(OnSettingsChanged))]
+#endif
         private float m_Padding = 5;
-        
-        [SerializeField, FoldoutGroup("Setup"), OnValueChanged(nameof(OnSettingsChanged))]
-        [EnumToggleButtons]
+
+        [SerializeField]
+#if ODIN_INSPECTOR
+        [FoldoutGroup("Setup"), OnValueChanged(nameof(OnSettingsChanged)), EnumToggleButtons]
+#endif
         private IsNested m_IsNested = IsNested.Single;
-        
-        [SerializeField, FoldoutGroup("Setup"), OnValueChanged(nameof(OnSettingsChanged))]
-        [ShowIf(nameof(m_IsNested), IsNested.Nested)]
-        [EnumToggleButtons]
+
+        [SerializeField, ShowIf(nameof(m_IsNested), (int)IsNested.Nested)]
+#if ODIN_INSPECTOR
+        [FoldoutGroup("Setup"), OnValueChanged(nameof(OnSettingsChanged)), EnumToggleButtons]
+#endif
         protected SlotLoc m_MainContentSlot = GraphicSystems.SlotLoc.Child;
 
-        [SerializeField, FoldoutGroup("Setup")]
-        [Range(0, 30)]
+        [SerializeField, Range(0, 30)]
+#if ODIN_INSPECTOR
+        [FoldoutGroup("Setup")]
+#endif
         private int m_ChildCount;
 
-        [FormerlySerializedAs("m_MainSlot")]
         [SerializeField]
-        [FoldoutGroup("Settings")]
-        [BoxGroup("Settings/Root Slot")]
-        [InlineProperty(LabelWidth = 68)]
-        [OnValueChanged(nameof(OnSettingsChanged), true)]
+#if ODIN_INSPECTOR
+        [FoldoutGroup("Settings"),BoxGroup("Settings/Root Slot"),InlineProperty(LabelWidth =
+ 68), OnValueChanged(nameof(OnSettingsChanged), true)]
+#endif
         private Slot m_RootSettings = new();
 
-        [FormerlySerializedAs("m_BackgroundSlot")]
-        [BoxGroup("Settings/Child Slot")]
-        [InlineProperty]
-        [SerializeField, FoldoutGroup("Settings"), ShowIf(nameof(m_IsNested), IsNested.Nested)]
-        [OnValueChanged(nameof(OnSettingsChanged), true)]
+        [SerializeField, ShowIf(nameof(m_IsNested), (int)IsNested.Nested)]
+#if ODIN_INSPECTOR
+        [OnValueChanged(nameof(OnSettingsChanged), true), FoldoutGroup("Settings"), BoxGroup("Settings/Child Slot"), InlineProperty]
+#endif
         private SlotConfig m_ChildSetting = new();
 
-        [SerializeField, FoldoutGroup("Runtime/FX"), OnValueChanged(nameof(OnSettingsChanged))] [InlineProperty(LabelWidth = 68)]
+        [SerializeField]
+#if ODIN_INSPECTOR
+        [FoldoutGroup("Runtime/FX"), OnValueChanged(nameof(OnSettingsChanged))] [InlineProperty(LabelWidth = 68)]
+#endif
         private UIFxType m_FxForeground;
-        [SerializeField, FoldoutGroup("Runtime/FX"), OnValueChanged(nameof(OnSettingsChanged))] [InlineProperty(LabelWidth = 68)]
+
+        [SerializeField]
+#if ODIN_INSPECTOR
+        [FoldoutGroup("Runtime/FX"), OnValueChanged(nameof(OnSettingsChanged))] [InlineProperty(LabelWidth = 68)]
+#endif
         private UIFxType m_FxBackground;
-        
-        [SerializeField, FoldoutGroup("Runtime"), OnValueChanged(nameof(OnSettingsChanged))] [InlineProperty(LabelWidth = 68)]
+
+        [SerializeField]
+#if ODIN_INSPECTOR
+        [FoldoutGroup("Runtime"), OnValueChanged(nameof(OnSettingsChanged))] [InlineProperty(LabelWidth = 68)]
+#endif
         private bool m_AllowOverridenChildren = false;
-        [SerializeField, FoldoutGroup("Runtime"), OnValueChanged(nameof(OnSettingsChanged))] [InlineProperty(LabelWidth = 68)]
+
+        [SerializeField]
+#if ODIN_INSPECTOR
+        [FoldoutGroup("Runtime"), OnValueChanged(nameof(OnSettingsChanged))] [InlineProperty(LabelWidth = 68)]
+#endif
         protected bool m_AllowMultipleSelection = false;
-        [SerializeField, Min(2), ShowIf(nameof(m_AllowMultipleSelection)), FoldoutGroup("Runtime")] [InlineProperty(LabelWidth = 68)]
+
+        [SerializeField, Min(2), ShowIf(nameof(m_AllowMultipleSelection))]
+#if ODIN_INSPECTOR
+        [ FoldoutGroup("Runtime")] [InlineProperty(LabelWidth = 68)]
+#endif
         private int m_MultiSelectLimit = 2;
-        [SerializeField, FoldoutGroup("Runtime"), OnValueChanged(nameof(OnSettingsChanged))] [InlineProperty(LabelWidth = 68)]
+
+        [SerializeField]
+#if ODIN_INSPECTOR
+        [ FoldoutGroup("Runtime"), OnValueChanged(nameof(OnSettingsChanged))] [InlineProperty(LabelWidth = 68)]
+#endif
         private bool m_AllowDeselection = false;
 
 
@@ -139,8 +171,11 @@ namespace Cadi.Scripts.UI.GraphicSystems
             }
 #endif
         }
-
-        [Button, FoldoutGroup("Setup")]
+        
+        [Button]
+#if ODIN_INSPECTOR
+        [ FoldoutGroup("Setup")]
+#endif
         public void Refresh()
         {
 #if UNITY_EDITOR
@@ -256,25 +291,7 @@ namespace Cadi.Scripts.UI.GraphicSystems
                 }
             }
         }
-        // public void SetContent(List<Texture> content, Texture back = null)
-        // {
-        //     for (int i = 0; i < m_SImages.Count; i++)
-        //     {
-        //         if (i >= content.Count)
-        //         {
-        //             m_SImages[i].gameObject.SetActive(false);
-        //         }
-        //         else
-        //         {
-        //             m_SImages[i].gameObject.SetActive(true);
-        //             m_SImages[i].SetTargetContent(content[i]);
-        //
-        //             if (back != null && m_SImages[i] is NestedGraphix nested)
-        //                 nested.SetSecondSlotContent(back);
-        //         }
-        //     }
-        // }
-
+   
         public List<Graphix> GetImagesRandomOrder()
         {
             var shuffled = new List<Graphix>(m_SImages);

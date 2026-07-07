@@ -11,7 +11,7 @@ namespace Cadi.Scripts.Utility
     /// - Safe behavior on application quit (no "ghost singleton" recreation)
     /// - Plays well with "Domain Reload disabled"
     /// </summary>
-    [DefaultExecutionOrder(-10_000)] // Ensure it initializes early vs typical gameplay scripts.
+    [DefaultExecutionOrder(-ExecOrder.SINGLETON)] // Ensure it initializes early vs typical gameplay scripts.
     public abstract class SingletonBehaviour<T> : MonoBehaviour
         where T : SingletonBehaviour<T>
     {

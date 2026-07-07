@@ -1,9 +1,8 @@
-using Sirenix.OdinInspector;
+using Cadi.Scripts.CustomAttributes;
 using UnityEngine;
-using UnityEngine.Serialization;
 using UnityEngine.UI;
 
-namespace _App.Scripts.Utility.UI
+namespace Cadi.Scripts.UI.Extensions
 {
     [AddComponentMenu("Layout/Better Grid Layout Group", 152)]
     public class BetterGridLayoutGroup : LayoutGroup
@@ -80,8 +79,8 @@ namespace _App.Scripts.Utility.UI
             get => m_GridConstraint;
             set => SetProperty(ref m_GridConstraint, value);
         }
-
-        [SerializeField][ShowIf("m_GridConstraint",  Constraint.FixedColumnCount), ShowIf("m_GridConstraint", Constraint.FixedRowCount)]
+        
+        [SerializeField][ShowIf("m_GridConstraint",  (int)Constraint.FixedColumnCount), ShowIf("m_GridConstraint", (int)Constraint.FixedRowCount)]
         private int m_ConstraintCount = 2;
 
         public int ConstraintCount

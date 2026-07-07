@@ -1,21 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Cadi.Scripts.CacherSystem;
+using Cadi.Scripts.CustomAttributes;
+#if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
 using Sirenix.Utilities;
+#endif
 using UnityEngine;
 
 namespace Cadi.Scripts.UI
 {
     public class CanvasPD : CacherMonoBehaviour
     {
-        [SerializeField, ReadOnly] [ListDrawerSettings(
-            DraggableItems = false,
-            HideAddButton = true,
-            HideRemoveButton = true,
-            ListElementLabelName = nameof(CanvasOrderPolice.GetHighestOrder), DefaultExpandedState = true
-        )]
+        [SerializeField]
+#if ODIN_INSPECTOR
+        [ReadOnly,ListDrawerSettings(DraggableItems = false, HideAddButton = true, HideRemoveButton = true,
+            ListElementLabelName = nameof(CanvasOrderPolice.GetHighestOrder), DefaultExpandedState = true)]
+#endif
         private List<CanvasOrderPolice> m_Polices;
 
         public override void ResolveReferences()

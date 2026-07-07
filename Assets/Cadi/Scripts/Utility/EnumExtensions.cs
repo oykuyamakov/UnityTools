@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace CadiKazani.Scripts.Utility
+namespace Cadi.Scripts.Utility
 {
     public static class EnumExtensions 
     {

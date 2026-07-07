@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -26,7 +25,7 @@ namespace Cadi.Shaders.UI.BlurKit
 
         private RenderTexture m_CaptureTexture;
         private RenderTexture m_BlurredTexture;
-        private const float m_RenderScale = 1f;
+        private const float c_RenderScale = 1f;
 
         private bool m_Enabled;
 
@@ -51,14 +50,17 @@ namespace Cadi.Shaders.UI.BlurKit
         {
             ReleaseTextures();
         }
-
+#if ODIN_INSPECTOR
         [Sirenix.OdinInspector.Button]
+#endif
         public void EnableBlur()
         {
             ToggleBlur(true);
         }
-
+        
+#if ODIN_INSPECTOR
         [Sirenix.OdinInspector.Button]
+#endif
         public void DisableBlur()
         {
             ToggleBlur(false);
@@ -119,8 +121,8 @@ namespace Cadi.Shaders.UI.BlurKit
         {
             ReleaseTextures();
 
-            int width = Mathf.Max(1, Mathf.RoundToInt(Screen.width * m_RenderScale));
-            int height = Mathf.Max(1, Mathf.RoundToInt(Screen.height * m_RenderScale));
+            int width = Mathf.Max(1, Mathf.RoundToInt(Screen.width * c_RenderScale));
+            int height = Mathf.Max(1, Mathf.RoundToInt(Screen.height * c_RenderScale));
 
             m_CaptureTexture = new RenderTexture(width, height, 24, RenderTextureFormat.ARGB32)
             {

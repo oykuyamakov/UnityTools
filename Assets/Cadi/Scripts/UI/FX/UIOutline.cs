@@ -1,8 +1,8 @@
- using Cadi.Scripts.CacherSystem;
- using UnityEngine;
+using Cadi.Scripts.CacherSystem;
+using UnityEngine;
 using UnityEngine.UI;
 
-namespace _App.Scripts.Utility.UI
+namespace Cadi.Scripts.UI.FX
 {
     [ExecuteAlways]
     [DisallowMultipleComponent]
