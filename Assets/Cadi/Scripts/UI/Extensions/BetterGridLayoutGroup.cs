@@ -1,4 +1,3 @@
-using Cadi.Scripts.CustomAttributes;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -30,9 +29,9 @@ namespace Cadi.Scripts.UI.Extensions
 
         public enum IncompleteRowAlignment
         {
-            Default, 
-            Center, 
-            End 
+            Default,
+            Center,
+            End
         }
 
         [SerializeField]
@@ -79,8 +78,9 @@ namespace Cadi.Scripts.UI.Extensions
             get => m_GridConstraint;
             set => SetProperty(ref m_GridConstraint, value);
         }
-        
-        [SerializeField][ShowIf("m_GridConstraint",  (int)Constraint.FixedColumnCount), ShowIf("m_GridConstraint", (int)Constraint.FixedRowCount)]
+
+        [SerializeField]
+        [Min(1)]
         private int m_ConstraintCount = 2;
 
         public int ConstraintCount
@@ -102,7 +102,8 @@ namespace Cadi.Scripts.UI.Extensions
         protected override void OnValidate()
         {
             base.OnValidate();
-            ConstraintCount = ConstraintCount;
+
+            m_ConstraintCount = Mathf.Max(1, m_ConstraintCount);
         }
 #endif
 
@@ -110,8 +111,16 @@ namespace Cadi.Scripts.UI.Extensions
         {
             base.CalculateLayoutInputHorizontal();
 
-            int minColumns = 0;
-            int preferredColumns = 0;
+            int childCount = rectChildren.Count;
+
+            if (childCount == 0)
+            {
+                SetLayoutInputForAxis(padding.horizontal, padding.horizontal, -1, 0);
+                return;
+            }
+
+            int minColumns;
+            int preferredColumns;
 
             if (m_GridConstraint == Constraint.FixedColumnCount)
             {
@@ -119,27 +128,46 @@ namespace Cadi.Scripts.UI.Extensions
             }
             else if (m_GridConstraint == Constraint.FixedRowCount)
             {
-                minColumns = preferredColumns = Mathf.CeilToInt(rectChildren.Count / (float)m_ConstraintCount - 0.001f);
+                minColumns = preferredColumns = CeilDivide(childCount, m_ConstraintCount);
             }
             else
             {
                 minColumns = 1;
-                preferredColumns = Mathf.CeilToInt(Mathf.Sqrt(rectChildren.Count));
+                preferredColumns = Mathf.CeilToInt(Mathf.Sqrt(childCount));
             }
 
-            SetLayoutInputForAxis(
-                padding.horizontal + (CellSize.x + Spacing.x) * minColumns - Spacing.x,
-                padding.horizontal + (CellSize.x + Spacing.x) * preferredColumns - Spacing.x,
-                -1, 0);
+            float minWidth = CalculateRequiredSpace(
+                padding.horizontal,
+                CellSize.x,
+                Spacing.x,
+                minColumns
+            );
+
+            float preferredWidth = CalculateRequiredSpace(
+                padding.horizontal,
+                CellSize.x,
+                Spacing.x,
+                preferredColumns
+            );
+
+            SetLayoutInputForAxis(minWidth, preferredWidth, -1, 0);
         }
 
         public override void CalculateLayoutInputVertical()
         {
-            int minRows = 0;
+            int childCount = rectChildren.Count;
+
+            if (childCount == 0)
+            {
+                SetLayoutInputForAxis(padding.vertical, padding.vertical, -1, 1);
+                return;
+            }
+
+            int minRows;
 
             if (m_GridConstraint == Constraint.FixedColumnCount)
             {
-                minRows = Mathf.CeilToInt(rectChildren.Count / (float)m_ConstraintCount - 0.001f);
+                minRows = CeilDivide(childCount, m_ConstraintCount);
             }
             else if (m_GridConstraint == Constraint.FixedRowCount)
             {
@@ -148,13 +176,24 @@ namespace Cadi.Scripts.UI.Extensions
             else
             {
                 float width = rectTransform.rect.width;
-                int cellCountX = Mathf.Max(1,
-                    Mathf.FloorToInt((width - padding.horizontal + Spacing.x + 0.001f) / (CellSize.x + Spacing.x)));
-                minRows = Mathf.CeilToInt(rectChildren.Count / (float)cellCountX);
+                int cellCountX = CalculateFlexibleCellCount(
+                    width,
+                    padding.horizontal,
+                    CellSize.x,
+                    Spacing.x
+                );
+
+                minRows = CeilDivide(childCount, cellCountX);
             }
 
-            float minSpace = padding.vertical + (CellSize.y + Spacing.y) * minRows - Spacing.y;
-            SetLayoutInputForAxis(minSpace, minSpace, -1, 1);
+            float minHeight = CalculateRequiredSpace(
+                padding.vertical,
+                CellSize.y,
+                Spacing.y,
+                minRows
+            );
+
+            SetLayoutInputForAxis(minHeight, minHeight, -1, 1);
         }
 
         public override void SetLayoutHorizontal()
@@ -169,24 +208,32 @@ namespace Cadi.Scripts.UI.Extensions
 
         private void SetCellsAlongAxis(int axis)
         {
-            int rectChildrenCount = rectChildren.Count;
+            int childCount = rectChildren.Count;
 
             if (axis == 0)
             {
-                for (int i = 0; i < rectChildrenCount; i++)
+                for (int i = 0; i < childCount; i++)
                 {
                     RectTransform rect = rectChildren[i];
 
-                    m_Tracker.Add(this, rect,
+                    m_Tracker.Add(
+                        this,
+                        rect,
                         DrivenTransformProperties.Anchors |
                         DrivenTransformProperties.AnchoredPosition |
-                        DrivenTransformProperties.SizeDelta);
+                        DrivenTransformProperties.SizeDelta
+                    );
 
                     rect.anchorMin = Vector2.up;
                     rect.anchorMax = Vector2.up;
                     rect.sizeDelta = CellSize;
                 }
 
+                return;
+            }
+
+            if (childCount == 0)
+            {
                 return;
             }
 
@@ -199,52 +246,28 @@ namespace Cadi.Scripts.UI.Extensions
             if (m_GridConstraint == Constraint.FixedColumnCount)
             {
                 cellCountX = m_ConstraintCount;
-
-                if (rectChildrenCount > cellCountX)
-                {
-                    cellCountY = rectChildrenCount / cellCountX;
-
-                    if (rectChildrenCount % cellCountX > 0)
-                    {
-                        cellCountY += 1;
-                    }
-                }
+                cellCountY = CeilDivide(childCount, cellCountX);
             }
             else if (m_GridConstraint == Constraint.FixedRowCount)
             {
                 cellCountY = m_ConstraintCount;
-
-                if (rectChildrenCount > cellCountY)
-                {
-                    cellCountX = rectChildrenCount / cellCountY;
-
-                    if (rectChildrenCount % cellCountY > 0)
-                    {
-                        cellCountX += 1;
-                    }
-                }
+                cellCountX = CeilDivide(childCount, cellCountY);
             }
             else
             {
-                if (CellSize.x + Spacing.x <= 0)
-                {
-                    cellCountX = int.MaxValue;
-                }
-                else
-                {
-                    cellCountX = Mathf.Max(1,
-                        Mathf.FloorToInt((width - padding.horizontal + Spacing.x + 0.001f) / (CellSize.x + Spacing.x)));
-                }
+                cellCountX = CalculateFlexibleCellCount(
+                    width,
+                    padding.horizontal,
+                    CellSize.x,
+                    Spacing.x
+                );
 
-                if (CellSize.y + Spacing.y <= 0)
-                {
-                    cellCountY = int.MaxValue;
-                }
-                else
-                {
-                    cellCountY = Mathf.Max(1,
-                        Mathf.FloorToInt((height - padding.vertical + Spacing.y + 0.001f) / (CellSize.y + Spacing.y)));
-                }
+                cellCountY = CalculateFlexibleCellCount(
+                    height,
+                    padding.vertical,
+                    CellSize.y,
+                    Spacing.y
+                );
             }
 
             int cornerX = (int)m_StartCorner % 2;
@@ -256,38 +279,44 @@ namespace Cadi.Scripts.UI.Extensions
 
             if (m_StartAxis == Axis.Horizontal)
             {
-                cellsPerMainAxis = cellCountX;
-                actualCellCountX = Mathf.Clamp(cellCountX, 1, rectChildrenCount);
+                cellsPerMainAxis = Mathf.Max(1, cellCountX);
+                actualCellCountX = Mathf.Clamp(cellCountX, 1, childCount);
 
                 if (m_GridConstraint == Constraint.FixedRowCount)
                 {
-                    actualCellCountY = Mathf.Min(cellCountY, rectChildrenCount);
+                    actualCellCountY = Mathf.Min(cellCountY, childCount);
                 }
                 else
                 {
-                    actualCellCountY = Mathf.Clamp(cellCountY, 1,
-                        Mathf.CeilToInt(rectChildrenCount / (float)cellsPerMainAxis));
+                    actualCellCountY = Mathf.Clamp(
+                        cellCountY,
+                        1,
+                        CeilDivide(childCount, cellsPerMainAxis)
+                    );
                 }
             }
             else
             {
-                cellsPerMainAxis = cellCountY;
-                actualCellCountY = Mathf.Clamp(cellCountY, 1, rectChildrenCount);
+                cellsPerMainAxis = Mathf.Max(1, cellCountY);
+                actualCellCountY = Mathf.Clamp(cellCountY, 1, childCount);
 
                 if (m_GridConstraint == Constraint.FixedColumnCount)
                 {
-                    actualCellCountX = Mathf.Min(cellCountX, rectChildrenCount);
+                    actualCellCountX = Mathf.Min(cellCountX, childCount);
                 }
                 else
                 {
-                    actualCellCountX = Mathf.Clamp(cellCountX, 1,
-                        Mathf.CeilToInt(rectChildrenCount / (float)cellsPerMainAxis));
+                    actualCellCountX = Mathf.Clamp(
+                        cellCountX,
+                        1,
+                        CeilDivide(childCount, cellsPerMainAxis)
+                    );
                 }
             }
 
             Vector2 requiredSpace = new Vector2(
-                actualCellCountX * CellSize.x + (actualCellCountX - 1) * Spacing.x,
-                actualCellCountY * CellSize.y + (actualCellCountY - 1) * Spacing.y
+                actualCellCountX * CellSize.x + Mathf.Max(0, actualCellCountX - 1) * Spacing.x,
+                actualCellCountY * CellSize.y + Mathf.Max(0, actualCellCountY - 1) * Spacing.y
             );
 
             Vector2 startOffset = new Vector2(
@@ -295,37 +324,40 @@ namespace Cadi.Scripts.UI.Extensions
                 GetStartOffset(1, requiredSpace.y)
             );
 
-            // --- NEW: last-row alignment data (Horizontal fill only) ---
-            int lastRowIndex = -1;
+            int lastLogicalRowIndex = -1;
             int itemsInLastRow = 0;
 
             if (m_StartAxis == Axis.Horizontal)
             {
-                int rows = Mathf.CeilToInt(rectChildrenCount / (float)cellsPerMainAxis);
-                lastRowIndex = rows - 1;
+                int rowCount = CeilDivide(childCount, cellsPerMainAxis);
+                lastLogicalRowIndex = rowCount - 1;
 
-                itemsInLastRow = rectChildrenCount - lastRowIndex * cellsPerMainAxis;
+                itemsInLastRow = childCount - lastLogicalRowIndex * cellsPerMainAxis;
+
                 if (itemsInLastRow <= 0)
                 {
                     itemsInLastRow = cellsPerMainAxis;
                 }
             }
 
-            for (int i = 0; i < rectChildrenCount; i++)
+            for (int i = 0; i < childCount; i++)
             {
-                int positionX;
-                int positionY;
+                int logicalX;
+                int logicalY;
 
                 if (m_StartAxis == Axis.Horizontal)
                 {
-                    positionX = i % cellsPerMainAxis;
-                    positionY = i / cellsPerMainAxis;
+                    logicalX = i % cellsPerMainAxis;
+                    logicalY = i / cellsPerMainAxis;
                 }
                 else
                 {
-                    positionX = i / cellsPerMainAxis;
-                    positionY = i % cellsPerMainAxis;
+                    logicalX = i / cellsPerMainAxis;
+                    logicalY = i % cellsPerMainAxis;
                 }
+
+                int positionX = logicalX;
+                int positionY = logicalY;
 
                 if (cornerX == 1)
                 {
@@ -337,35 +369,119 @@ namespace Cadi.Scripts.UI.Extensions
                     positionY = actualCellCountY - 1 - positionY;
                 }
 
-                float extraX = 0f;
+                float extraX = GetIncompleteRowExtraOffsetX(
+                    logicalY,
+                    lastLogicalRowIndex,
+                    itemsInLastRow,
+                    cellsPerMainAxis,
+                    cornerX
+                );
 
-                if (m_StartAxis == Axis.Horizontal &&
-                    m_IncompleteRowAlignment != IncompleteRowAlignment.Default &&
-                    positionY == lastRowIndex &&
-                    itemsInLastRow < cellsPerMainAxis)
-                {
-                    int emptySlots = cellsPerMainAxis - itemsInLastRow;
-                    float stepX = CellSize.x + Spacing.x;
+                SetChildAlongAxis(
+                    rectChildren[i],
+                    0,
+                    startOffset.x + extraX + (CellSize.x + Spacing.x) * positionX,
+                    CellSize.x
+                );
 
-                    if (m_IncompleteRowAlignment == IncompleteRowAlignment.Center)
-                    {
-                        extraX = emptySlots * 0.5f * stepX;
-                    }
-                    else if (m_IncompleteRowAlignment == IncompleteRowAlignment.End)
-                    {
-                        extraX = emptySlots * stepX;
-                    }
-
-                    if (cornerX == 1)
-                    {
-                        extraX = -extraX;
-                    }
-                }
-
-                SetChildAlongAxis(rectChildren[i], 0, startOffset.x + extraX + (CellSize.x + Spacing.x) * positionX,
-                    CellSize.x);
-                SetChildAlongAxis(rectChildren[i], 1, startOffset.y + (CellSize.y + Spacing.y) * positionY, CellSize.y);
+                SetChildAlongAxis(
+                    rectChildren[i],
+                    1,
+                    startOffset.y + (CellSize.y + Spacing.y) * positionY,
+                    CellSize.y
+                );
             }
+        }
+
+        private float GetIncompleteRowExtraOffsetX(
+            int logicalY,
+            int lastLogicalRowIndex,
+            int itemsInLastRow,
+            int cellsPerMainAxis,
+            int cornerX
+        )
+        {
+            if (m_StartAxis != Axis.Horizontal)
+            {
+                return 0f;
+            }
+
+            if (m_IncompleteRowAlignment == IncompleteRowAlignment.Default)
+            {
+                return 0f;
+            }
+
+            if (logicalY != lastLogicalRowIndex)
+            {
+                return 0f;
+            }
+
+            if (itemsInLastRow >= cellsPerMainAxis)
+            {
+                return 0f;
+            }
+
+            int emptySlots = cellsPerMainAxis - itemsInLastRow;
+            float stepX = CellSize.x + Spacing.x;
+
+            float offset = 0f;
+
+            if (m_IncompleteRowAlignment == IncompleteRowAlignment.Center)
+            {
+                offset = emptySlots * 0.5f * stepX;
+            }
+            else if (m_IncompleteRowAlignment == IncompleteRowAlignment.End)
+            {
+                offset = emptySlots * stepX;
+            }
+
+            if (cornerX == 1)
+            {
+                offset = -offset;
+            }
+
+            return offset;
+        }
+
+        private static int CalculateFlexibleCellCount(
+            float availableSize,
+            float paddingSize,
+            float cellSize,
+            float spacing
+        )
+        {
+            float step = cellSize + spacing;
+
+            if (step <= 0f)
+            {
+                return int.MaxValue;
+            }
+
+            return Mathf.Max(
+                1,
+                Mathf.FloorToInt((availableSize - paddingSize + spacing + 0.001f) / step)
+            );
+        }
+
+        private static float CalculateRequiredSpace(
+            float paddingSize,
+            float cellSize,
+            float spacing,
+            int count
+        )
+        {
+            if (count <= 0)
+            {
+                return paddingSize;
+            }
+
+            return paddingSize + (cellSize + spacing) * count - spacing;
+        }
+
+        private static int CeilDivide(int value, int divisor)
+        {
+            divisor = Mathf.Max(1, divisor);
+            return Mathf.CeilToInt(value / (float)divisor);
         }
     }
 }

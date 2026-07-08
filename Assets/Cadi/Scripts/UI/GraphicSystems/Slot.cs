@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Cadi.Scripts.UI.FX;
 #if CADI_DOTWEEN
 using DG.Tweening;
@@ -13,8 +14,8 @@ namespace Cadi.Scripts.UI.GraphicSystems
 {
     public enum IsNested
     {
-        Single = 1 << 0,
-        Nested = 1 << 1,
+        Single,
+        Nested,
     }
 
     public enum SlotLoc
@@ -37,7 +38,7 @@ namespace Cadi.Scripts.UI.GraphicSystems
     {
         [SerializeField]
 #if ODIN_INSPECTOR
-        [PropertyOrder(0),HorizontalGroup("TypeRow", Width = 165),[LabelText("Type"),LabelWidth(40),EnumToggleButtons,PropertySpace(0, 4)]
+        [PropertyOrder(0),HorizontalGroup("TypeRow", Width = 165),LabelText("Type"),LabelWidth(40),EnumToggleButtons,PropertySpace(0, 4)]
 #endif
         protected GraphicType m_Type = GraphicType.Image;
 
@@ -177,6 +178,8 @@ namespace Cadi.Scripts.UI.GraphicSystems
 
         public void SetColor(Color color)
         {
+            KillTween();
+
             if (m_Graphic != null)
                 m_Graphic.color = color;
         }
@@ -197,9 +200,19 @@ namespace Cadi.Scripts.UI.GraphicSystems
         {
             if (m_Graphic == null)
                 return;
+
 #if CADI_DOTWEEN
-            m_Tween?.Kill();
-            m_Tween = m_Graphic.DOColor(color, duration);
+    m_Tween?.Kill();
+
+    if (duration <= 0f)
+    {
+        m_Graphic.color = color;
+        return;
+    }
+
+    m_Tween = m_Graphic.DOColor(color, duration);
+#else
+            m_Graphic.color = color;
 #endif
         }
 
@@ -246,7 +259,7 @@ namespace Cadi.Scripts.UI.GraphicSystems
             m_Outline.SetOutlineColor(active ? m_OutlineColor : m_DefaultColor, active ? m_OutlineWidth : 0f);
         }
 
-        public void CopyFrom(SlotConfig cfg)
+        public void CopyFrom(SlotConfig cfg, bool applyDefault = false)
         {
             m_Type = cfg.Type;
             m_DefaultColor = cfg.DefaultColor;
@@ -254,6 +267,9 @@ namespace Cadi.Scripts.UI.GraphicSystems
             m_UseOutline = cfg.UseOutline;
             m_OutlineWidth = cfg.OutlineWidth;
             m_OutlineColor = cfg.OutlineColor;
+
+            if (applyDefault)
+                ApplyDefault();
         }
 
         public void ApplyOutlineSettings()
@@ -276,11 +292,71 @@ namespace Cadi.Scripts.UI.GraphicSystems
 
         public void Dispose()
         {
+            KillTween();
+        }
+        
+        private void KillTween()
+        {
 #if CADI_DOTWEEN
-            
-            m_Tween?.Kill();
-            m_Tween = null;
+    m_Tween?.Kill();
+    m_Tween = null;
 #endif
+        }
+    }
+    
+    
+    public static class GraphicUtils
+    {
+        private static readonly Dictionary<Texture, Sprite> s_SpriteCache = new Dictionary<Texture, Sprite>();
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ClearCache()
+        {
+            foreach (Sprite sprite in s_SpriteCache.Values)
+            {
+                if (sprite == null)
+                    continue;
+
+#if UNITY_EDITOR
+                if (!Application.isPlaying)
+                    UnityEngine.Object.DestroyImmediate(sprite);
+                else
+                    UnityEngine.Object.Destroy(sprite);
+#else
+        UnityEngine.Object.Destroy(sprite);
+#endif
+            }
+
+            s_SpriteCache.Clear();
+        }
+
+        public static Sprite GetSpriteFromTexture(Texture texture)
+        {
+            if (texture == null)
+                return null;
+
+            if (texture is not Texture2D texture2D)
+            {
+                Debug.LogWarning($"Cannot create Sprite from texture type {texture.GetType().Name}. Expected Texture2D.");
+                return null;
+            }
+
+            if (s_SpriteCache.TryGetValue(texture, out var sprite))
+                return sprite;
+
+            var newSprite = Sprite.Create(
+                texture2D,
+                new Rect(0, 0, texture2D.width, texture2D.height),
+                Vector2.one * 0.5f
+            );
+
+            s_SpriteCache[texture] = newSprite;
+            return newSprite;
+        }
+
+        public static Texture TextureFromSprite(Sprite sprite)
+        {
+            return sprite?.texture;
         }
     }
 }

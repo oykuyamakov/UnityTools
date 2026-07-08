@@ -39,13 +39,15 @@ namespace Cadi.Scripts.UI.FX
         private static readonly int s_OutlineColorId = Shader.PropertyToID("_OutlineColor");
         private static readonly int s_OutlineWidthId = Shader.PropertyToID("_OutlineWidth");
         private static readonly int s_AlphaThresholdId = Shader.PropertyToID("_AlphaThreshold");
-        private static readonly int s_InwardBlend = Shader.PropertyToID("_InwardBlend");
+        private static readonly int s_InwardBlend = Shader.PropertyToID("_OutlineBlend");
         private static readonly int s_OutlineMode = Shader.PropertyToID("_OutlineMode");
 
         public override void ResolveReferences()
         {
             base.ResolveReferences();
-
+            
+            //Shader.Find can return null in builds if the shader is stripped / not included. If that happens, outline silently does nothing.
+            // if not I already did it put "UI/AlphaOutline" in Always Included Shaders.
             if (m_OutlineShader == null)
                 m_OutlineShader = Shader.Find("UI/AlphaOutline");
 
@@ -55,7 +57,7 @@ namespace Cadi.Scripts.UI.FX
             if (m_MatInstance == null || m_MatInstance.shader != m_OutlineShader)
             {
                 if (m_MatInstance != null)
-                    DestroyImmediate(m_MatInstance);
+                    SafeDestroy(m_MatInstance);
 
                 m_MatInstance = new Material(m_OutlineShader) { name = "UI_AlphaOutline (Instance)" };
             }
@@ -73,12 +75,27 @@ namespace Cadi.Scripts.UI.FX
             if (m_MatInstance != null)
             {
 #if UNITY_EDITOR
-                DestroyImmediate(m_MatInstance);
+                SafeDestroy(m_MatInstance);
 #else
             Destroy(m_MatInstance);
 #endif
                 m_MatInstance = null;
             }
+        }
+        
+        private static void SafeDestroy(Object obj)
+        {
+            if (obj == null)
+                return;
+
+#if UNITY_EDITOR
+            if (!Application.isPlaying)
+                DestroyImmediate(obj);
+            else
+                Destroy(obj);
+#else
+    Destroy(obj);
+#endif
         }
         
         private void Apply()

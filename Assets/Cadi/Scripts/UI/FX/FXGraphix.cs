@@ -24,10 +24,8 @@ namespace Cadi.Scripts.UI.FX
 
         protected override bool ShowSlot => false;
         protected override bool ShowSettings => true;
-
-        // -----------------------------------------------------------
-        // Editor
-        // -----------------------------------------------------------
+        
+        private Coroutine m_Routine;
 
 #if UNITY_EDITOR
         protected override void EditorSync()
@@ -60,6 +58,8 @@ namespace Cadi.Scripts.UI.FX
 
         public void FinFout(int orderInLayer, float duration, Color color, Action<FXGraphix> onComplete)
         {
+            StopFxRoutine();
+            
             Sizer(1);
             m_Slot.SetColor(new Color(color.r, color.g, color.b, 0f));
             gameObject.SetActive(true);
@@ -107,6 +107,8 @@ namespace Cadi.Scripts.UI.FX
 
         public void Fin(int orderInLayer, float duration, Color color, Action onComplete = null)
         {
+            StopFxRoutine();
+            
             Sizer(1);
             m_Slot.SetColor(new Color(color.r, color.g, color.b, 0f));
             gameObject.SetActive(true);
@@ -127,6 +129,20 @@ namespace Cadi.Scripts.UI.FX
                 yield return null;
             }
         }
+        
+        private void StopFxRoutine()
+        {
+            if (m_Routine == null)
+                return;
+
+            StopCoroutine(m_Routine);
+            m_Routine = null;
+        }
+        
+        public void StopFx()
+        {
+            StopFxRoutine();
+        }
     }
 
     public static class ImagePrefabHelpers
@@ -138,8 +154,7 @@ namespace Cadi.Scripts.UI.FX
 
             if (prefab == null)
             {
-                Debug.LogError(
-                    $" UI prefab: {prefab.FxType.ToString()}is null. Please assign a prefab in Content SO.");
+                Debug.LogError("UI FX prefab is null. Please assign a prefab in Content SO.");
                 return null;
             }
 

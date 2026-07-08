@@ -12,7 +12,6 @@ namespace Cadi.Scripts.Utility.Editor
 
         static CadiDotweenDefineSetter()
         {
-            // DOTween'in ana tipini reflection ile ara — assembly yüklüyse bulur
             bool dotweenExists = System.AppDomain.CurrentDomain
                 .GetAssemblies()
                 .Any(asm => asm.GetType("DG.Tweening.DOTween") != null);

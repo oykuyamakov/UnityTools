@@ -91,19 +91,31 @@ namespace Cadi.Scripts.UI.GraphicSystems
             if (m_MainChild != null)
                 return;
 
-            var existing = transform.Find("Main");
+            Transform existing = transform.Find("Main");
+
             if (existing != null)
             {
-                m_MainChild = existing as RectTransform;
+                m_MainChild = existing.GetComponent<RectTransform>();
+
+                if (m_MainChild == null)
+                {
+                    Debug.LogWarning(
+                        $"{nameof(NestedGraphix)} found a child named Main, but it does not have a RectTransform. Creating a UI Main child instead.",
+                        this
+                    );
+
+                    existing.name = "Main_NonUI";
+                }
             }
-            else
+
+            if (m_MainChild == null)
             {
                 var go = new GameObject("Main", typeof(RectTransform), typeof(Image));
                 go.transform.SetParent(transform, false);
                 m_MainChild = go.GetComponent<RectTransform>();
             }
 
-            if (m_MainChild != null && m_MainChild.GetComponent<Graphic>() == null)
+            if (m_MainChild.GetComponent<Graphic>() == null)
             {
                 m_MainChild.gameObject.AddComponent<Image>();
             }

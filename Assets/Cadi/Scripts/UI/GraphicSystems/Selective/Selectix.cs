@@ -1,38 +1,31 @@
 using Cadi.Scripts.EventSystem;
+using UnityEngine;
+using UnityEngine.EventSystems;
 #if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
 #endif
-using UnityEngine;
-using UnityEngine.EventSystems;
 
-namespace Cadi.Scripts.UI.GraphicSystems
+namespace Cadi.Scripts.UI.GraphicSystems.Selective
 {
     public class Selectix : Graphix, IPointerDownHandler, ISelectix
     {
         [SerializeField]
 #if ODIN_INSPECTOR
-         [FoldoutGroup("Settings/Selection")]
-        [InlineProperty, LabelText("Selection")][ShowIf(nameof(ShowSettings))]
+         [FoldoutGroup("Settings/Selection"), InlineProperty, LabelText("Selection")][ShowIf(nameof(ShowSettings))]
 #endif
         private SelectionController m_Selection = new();
 
-        private bool m_ShowSettings;
         protected override bool ShowSettings => m_ShowSettings;
-
-        // -----------------------------------------------------------
-        // Properties
-        // -----------------------------------------------------------
 
         public int RuntimeID => m_Selection.RuntimeID;
         public bool IsLocked => m_Selection.IsLocked;
-
-        // -----------------------------------------------------------
-        // Lifecycle
-        // -----------------------------------------------------------
+        
+        private bool m_ShowSettings;
 
         private void Start()
         {
             Init();
+            
             using var evt = SGraphixCreatedEvent.Rent(this);
             EM.SendEvent(evt, m_Selection.Group);
         }
@@ -40,17 +33,14 @@ namespace Cadi.Scripts.UI.GraphicSystems
         private void OnDisable()
         {
             m_Selection.OnDisable();
+            UpdateVisuals(false);
         }
-
-        private new void OnDestroy()
+        
+        protected override void OnDestroy()
         {
             m_Selection.OnDestroy();
-            m_Slot.Dispose();
+            base.OnDestroy();
         }
-
-        // -----------------------------------------------------------
-        // IPointerDownHandler
-        // -----------------------------------------------------------
 
         public void OnPointerDown(PointerEventData eventData)
         {
@@ -61,7 +51,16 @@ namespace Cadi.Scripts.UI.GraphicSystems
         // Public API
         // -----------------------------------------------------------
 
+
+        public void Init() =>
+            m_Selection.BindToGraphix(this);
       
+        public void SetGroup(int runtimeId, SelectixGroup group)
+        {
+            m_Selection.SetGroup(runtimeId, group);
+            
+            m_Slot.ApplyDefault();
+        }
         public void Lock(bool disableVis)
         {
             m_Selection.Lock(disableVis);
@@ -75,15 +74,6 @@ namespace Cadi.Scripts.UI.GraphicSystems
 
         public void TryDeselect() => m_Selection.TryDeselect();
 
-        public void SetGroup(int runtimeId, SelectixGroup group)
-        {
-            m_Selection.SetGroup(runtimeId, group);
-            
-            m_Slot.ApplyDefault();
-        }
-
-        public void Init() =>
-            m_Selection.BindToGraphix(this);
 
         public void EditorBind(SelectixGroup group)
         {

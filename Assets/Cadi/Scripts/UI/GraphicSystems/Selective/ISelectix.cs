@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Cadi.Scripts.UI.GraphicSystems
+namespace Cadi.Scripts.UI.GraphicSystems.Selective
 {
     public interface ISelectix
     {

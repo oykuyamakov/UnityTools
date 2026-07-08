@@ -165,13 +165,18 @@ namespace Cadi.Scripts.UI.FX
         private void ReturnPooledFxImage(FXGraphix img)
         {
             if (img == null)
-            {
                 return;
-            }
 
+            img.StopFx();
             img.gameObject.SetActive(false);
             img.transform.SetParent(m_UICanvas.transform, false);
-            m_FxImgPool[img.FxType].Push( img);
+            if (!m_FxImgPool.TryGetValue(img.FxType, out var stack))
+            {
+                stack = new Stack<FXGraphix>();
+                m_FxImgPool.Add(img.FxType, stack);
+            }
+
+            stack.Push(img);
         }
 
         // ---------------------------

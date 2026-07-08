@@ -4,16 +4,13 @@ using Cadi.Scripts.CacherSystem;
 using Cadi.Scripts.CustomAttributes;
 using Cadi.Scripts.EventSystem;
 using Cadi.Scripts.UI.FX;
-
+using UnityEngine;
+using UnityEngine.UI;
 #if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
 #endif
 
-using UnityEngine;
-using UnityEngine.Serialization;
-using UnityEngine.UI;
-
-namespace Cadi.Scripts.UI.GraphicSystems
+namespace Cadi.Scripts.UI.GraphicSystems.Selective
 {
     public class SelectixGroup : CacherMonoBehaviour
     {
@@ -351,6 +348,13 @@ namespace Cadi.Scripts.UI.GraphicSystems
         protected virtual void OnSImageSelected(SGraphixSelectedEvent evt)
         {
             var sImage = evt.Selectix;
+
+            if (sImage == null)
+            {
+                Debug.LogError("SImage is null on selection event");
+                return;
+            }
+            
             if (m_SelectedImages.Contains(sImage))
             {
                 Debug.LogWarning($"Image {sImage.RuntimeID} is already selected in group {this.name}");
@@ -370,6 +374,13 @@ namespace Cadi.Scripts.UI.GraphicSystems
         protected virtual void OnSImageDeselected(SGraphixDeselectedEvent evt)
         {
             var sImage = evt.Selectix;
+            
+            if (sImage == null)
+            {
+                Debug.LogError("SImage is null on selection event");
+                return;
+            }
+            
             if (!m_SelectedImages.Remove(sImage))
                 return;
 

@@ -1,12 +1,12 @@
 using System;
 using Cadi.Scripts.EventSystem;
 using Cadi.Scripts.UI.FX;
+using UnityEngine;
 #if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
 #endif
-using UnityEngine;
 
-namespace Cadi.Scripts.UI.GraphicSystems
+namespace Cadi.Scripts.UI.GraphicSystems.Selective
 {
     [Serializable]
 #if ODIN_INSPECTOR
@@ -50,6 +50,8 @@ namespace Cadi.Scripts.UI.GraphicSystems
         
         private ISelectix m_Owner;
         
+        private bool m_Subscribed;
+        
         private bool m_ExposeSettings = false;
 
         // -----------------------------------------------------------
@@ -88,15 +90,22 @@ namespace Cadi.Scripts.UI.GraphicSystems
 
         public void Subscribe()
         {
+            if (m_Group == null || m_Subscribed)
+                return;
+
             EM.AddListener<SGraphixSelectedEvent>(OnOtherSelected, Priority.High, m_Group);
+            m_Subscribed = true;
         }
 
         public void Unsubscribe()
         {
-            if (m_Group != null)
-                EM.RemoveListener<SGraphixSelectedEvent>(OnOtherSelected, m_Group);
-        }
+            if (m_Group == null || !m_Subscribed)
+                return;
 
+            EM.RemoveListener<SGraphixSelectedEvent>(OnOtherSelected, m_Group);
+            m_Subscribed = false;
+        }
+        
         public void OnDisable()
         {
             ResetLockRespectful();
@@ -199,15 +208,15 @@ namespace Cadi.Scripts.UI.GraphicSystems
 
         public void SetGroup(int runtimeId, SelectixGroup group)
         {
+            if (group == null)
+                return;
+            
             if (GroupSet && m_Group != group)
             {
+                Unsubscribe();
                 Debug.Log($"WTF.");
                 return;
             }
-            
-            if(!GroupSet)
-                Debug.Log($"WTF 2.");
-            
         
             m_RuntimeID = runtimeId;
             m_Group = group;
@@ -259,7 +268,7 @@ namespace Cadi.Scripts.UI.GraphicSystems
 
         private void SpawnSelectionFx()
         {
-            if (m_Pooler == null)
+            if (m_Pooler == null || m_Group == null || m_OwnerRT == null)
                 return;
 
             DisableSelectionFx();

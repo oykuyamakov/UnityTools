@@ -1,27 +1,26 @@
 using Cadi.Scripts.EventSystem;
+using UnityEngine;
+using UnityEngine.EventSystems;
 #if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
 #endif
-using UnityEngine;
-using UnityEngine.EventSystems;
 
-namespace Cadi.Scripts.UI.GraphicSystems
+namespace Cadi.Scripts.UI.GraphicSystems.Selective
 {
     public class NestedSelectix : NestedGraphix, IPointerDownHandler, ISelectix
     {
         [SerializeField]
 #if ODIN_INSPECTOR
-        [FoldoutGroup("Settings/Selection"), ShowIf(nameof(ShowSettings))]
-        [InlineProperty, LabelText("Selection")]
+        [FoldoutGroup("Settings/Selection"), ShowIf(nameof(ShowSettings)),InlineProperty, LabelText("Selection")]
 #endif
         private SelectionController m_Selection = new();
+
+        [SerializeField, HideInInspector]
+        private bool m_ShowSettings = false;
 
         protected override bool ShowSettings => m_ShowSettings;
         public int RuntimeID => m_Selection.RuntimeID;
         public bool IsLocked => m_Selection.IsLocked;
-
-        [SerializeField, HideInInspector]
-        private bool m_ShowSettings = false;
 
         private void Start()
         {
@@ -34,14 +33,12 @@ namespace Cadi.Scripts.UI.GraphicSystems
         private void OnDisable()
         {
             m_Selection.OnDisable();
-
             UpdateVisuals(false);
         }
 
-        private new void OnDestroy()
+        protected override void OnDestroy()
         {
             m_Selection.OnDestroy();
-            
             base.OnDestroy();
         }
 
@@ -54,34 +51,24 @@ namespace Cadi.Scripts.UI.GraphicSystems
         // Public API
         // -----------------------------------------------------------
 
+        public void Init()
+            => m_Selection.BindToGraphix(this);
+        
+        public void SetGroup(int runtimeId, SelectixGroup group)
+        {
+            m_Selection.SetGroup(runtimeId, group);
+            UpdateVisuals(false);
+        }
         public void Lock(bool disableFX)
         {
             m_Selection.Lock(disableFX);
-
             UpdateVisuals(false);
         }
 
         public void UnLock() => m_Selection.UnLock();
 
-        public void TryDeselect()
-            => m_Selection.TryDeselect();
-
-        // public void SlotVis(IsNested mode, bool vis)
-        // {
-        //     m_Selection.SlotVis(GetSelectiveSlot(mode), vis);
-        // }
-
-        public void SetGroup(int runtimeId, SelectixGroup group)
-        {
-            m_Selection.SetGroup(runtimeId, group);
-
-            UpdateVisuals(false);
-        }
-
-        public void Init()
-            => m_Selection.BindToGraphix(this);
-
-
+        public void TryDeselect() => m_Selection.TryDeselect();
+        
         public void EditorBind(SelectixGroup group)
         {
             if (group == null)

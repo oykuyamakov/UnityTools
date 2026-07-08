@@ -20,7 +20,7 @@ namespace Cadi.Scripts.UI.GraphicSystems
 
         [CachedField, SerializeField, HideInInspector]
         protected RectTransform m_RectTransform;
-        
+
         public Slot ThisSlot => m_Slot;
         public bool ContentSet { get; protected set; }
         protected virtual bool ShowSettings => true;
@@ -29,6 +29,7 @@ namespace Cadi.Scripts.UI.GraphicSystems
 
         public virtual IsNested IsNested => IsNested.Single;
         public RectTransform CachedRectTransform => m_RectTransform;
+
         public virtual void SetContent(Sprite content, bool preserveAspect, bool fullStretch)
         {
             SetContentInternal(m_Slot, content, preserveAspect, fullStretch);
@@ -36,6 +37,8 @@ namespace Cadi.Scripts.UI.GraphicSystems
 
         public virtual void SetContent(Texture content)
         {
+            RuntimeBind();
+            
             m_Slot.SetTexture(content);
             ContentSet = true;
         }
@@ -76,6 +79,18 @@ namespace Cadi.Scripts.UI.GraphicSystems
                 }
             }
         }
+        
+        protected virtual void RuntimeBind()
+        {
+            if (m_Slot.Graphic != null)
+                return;
+
+            m_Slot.Bind(
+                GetComponent<Graphic>(),
+                GetComponent<UIOutline>()
+            );
+        }
+
         public virtual void UpdateVisuals(bool selected)
         {
             ApplySlotVisual(m_Slot, selected);
@@ -88,6 +103,7 @@ namespace Cadi.Scripts.UI.GraphicSystems
             else
                 slot.ApplyDefault();
         }
+
         protected virtual void OnDestroy()
         {
             m_Slot.Dispose();
@@ -105,11 +121,14 @@ namespace Cadi.Scripts.UI.GraphicSystems
 
         protected void EditorSyncSlot(Slot slot, GameObject host)
         {
-            if(!gameObject.activeInHierarchy)
+            if (host == null || !host.activeInHierarchy)
                 return;
-            
+
             EnsureGraphic(host, slot.Type);
-            CorrectType(host, slot.Type);
+
+            if (CorrectType(host, slot))
+                return;
+
             BindSlot(slot, host);
             SyncOutline(slot, host);
             slot.ApplyDefault();
@@ -126,7 +145,6 @@ namespace Cadi.Scripts.UI.GraphicSystems
             EditorSync();
         }
 #if ODIN_INSPECTOR
-        
         [Button("Refresh"), PropertyOrder(100)]
         [FoldoutGroup("Settings")]
         [ShowIf(nameof(ShowSettings))]
@@ -136,10 +154,6 @@ namespace Cadi.Scripts.UI.GraphicSystems
             EditorSync();
             UnityEditor.EditorUtility.SetDirty(this);
         }
-
-        // -----------------------------------------------------------
-        // Protected editor utilities (used by subclasses)
-        // -----------------------------------------------------------
 
         private static void EnsureGraphic(GameObject host, GraphicType type)
         {
@@ -157,41 +171,71 @@ namespace Cadi.Scripts.UI.GraphicSystems
             }
         }
 
-        private static void CorrectType(GameObject host, GraphicType type)
+        private static bool CorrectType(GameObject host, Slot slot)
         {
             var current = host.GetComponent<Graphic>();
             if (current == null)
-                return;
+                return false;
+
+            GraphicType type = slot.Type;
 
             bool alreadyCorrect =
                 type == GraphicType.Image && current is Image ||
                 type == GraphicType.Raw && current is RawImage;
 
             if (alreadyCorrect)
-                return;
+                return false;
 
-            // Delay structural changes to avoid OnValidate issues
             var hostRef = host;
+            var slotRef = slot;
             var typeRef = type;
+
             UnityEditor.EditorApplication.delayCall += () =>
             {
                 if (hostRef == null)
                     return;
 
-                var g = hostRef.GetComponent<Graphic>();
-                if (g != null)
-                    DestroyImmediate(g);
+                var oldGraphic = hostRef.GetComponent<Graphic>();
+
+                if (oldGraphic != null)
+                    DestroyImmediate(oldGraphic);
+
+                Graphic newGraphic = null;
 
                 switch (typeRef)
                 {
                     case GraphicType.Image:
-                        hostRef.AddComponent<Image>();
+                        newGraphic = hostRef.AddComponent<Image>();
                         break;
+
                     case GraphicType.Raw:
-                        hostRef.AddComponent<RawImage>();
+                        newGraphic = hostRef.AddComponent<RawImage>();
                         break;
                 }
+
+                var outline = hostRef.GetComponent<UIOutline>();
+
+                slotRef.Bind(newGraphic, outline);
+
+                if (slotRef.UseOutline)
+                {
+                    if (outline == null)
+                        outline = hostRef.AddComponent<UIOutline>();
+
+                    slotRef.Bind(newGraphic, outline);
+                    slotRef.ApplyOutlineSettings();
+                }
+                else if (outline != null)
+                {
+                    outline.enabled = false;
+                }
+
+                slotRef.ApplyDefault();
+
+                UnityEditor.EditorUtility.SetDirty(hostRef);
             };
+
+            return true;
         }
 
         private static void BindSlot(Slot slot, GameObject host)
