@@ -16,7 +16,6 @@ namespace Cadi.Scripts.Utility
         where T : SingletonBehaviour<T>
     {
         private static T s_Instance;
-        private static bool s_IsQuitting;
 
         /// <summary>
         /// Override if you want a scene-bound singleton (false) vs global singleton (true).
@@ -30,8 +29,8 @@ namespace Cadi.Scripts.Utility
         {
             get
             {
-                // During shutdown Unity destroys objects; creating new objects here causes editor/runtime weirdness.
-                if (s_IsQuitting)
+                // During shutdown Unity destroys objects; creating new ones causes editor/runtime weirdness.
+                if (!Application.isPlaying)
                 {
                     return null;
                 }
@@ -60,7 +59,7 @@ namespace Cadi.Scripts.Utility
         /// </summary>
         public static bool TryGetInstance(out T instance)
         {
-            instance = s_IsQuitting ? null : s_Instance;
+            instance = !Application.isPlaying ? null : s_Instance;
             if (instance != null)
             {
                 return true;
@@ -76,11 +75,6 @@ namespace Cadi.Scripts.Utility
         /// </summary>
         protected virtual void Awake()
         {
-            if (s_IsQuitting)
-            {
-                return;
-            }
-
             if (s_Instance != null && s_Instance != this)
             {
                 // - Keep the first registered instance
@@ -95,12 +89,6 @@ namespace Cadi.Scripts.Utility
             {
                 Object.DontDestroyOnLoad(gameObject);
             }
-        }
-
-        protected virtual void OnApplicationQuit()
-        {
-            // Prevent re-creating singleton during teardown.
-            s_IsQuitting = true;
         }
 
         protected virtual void OnDestroy()

@@ -2,7 +2,7 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace Cadi.Scripts.DataSaving
+namespace Cadi.Scripts.Utility.DataSaving
 {
     [CreateAssetMenu(fileName = "GeneralSettings", menuName = "GeneralSettings", order = 0)]
     public class GeneralSettings : ScriptableObject

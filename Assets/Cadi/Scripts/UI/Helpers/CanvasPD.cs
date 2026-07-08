@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Cadi.Scripts.CacherSystem;
-using Cadi.Scripts.CustomAttributes;
 #if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
-using Sirenix.Utilities;
+#else
+using Cadi.Scripts.CustomAttributes;
 #endif
 using UnityEngine;
 
@@ -28,7 +28,7 @@ namespace Cadi.Scripts.UI
         [Button]
         public void Refresh()
         {
-            var polices = GameObject.FindObjectsByType<CanvasOrderPolice>(sortMode: FindObjectsSortMode.None);
+            var polices = GameObject.FindObjectsByType<CanvasOrderPolice>(sortMode: FindObjectsSortMode.None,  findObjectsInactive: FindObjectsInactive.Include);
             m_Polices = polices.OrderBy(c => c.GetHighestOrder()).ToList();
         }
     }

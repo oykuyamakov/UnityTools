@@ -71,7 +71,7 @@ Like Unity's `[Range]`, but the min/max can come from other fields instead of be
 
 **How to use:**
 ```csharp
-public float MinSpeed = 1f;
+public float MinSpeed = 1f;[README.md](../../../../README.md)
 public float MaxSpeed = 10f;
 
 [DynamicRange("MinSpeed", "MaxSpeed")]
@@ -81,7 +81,7 @@ public float CurrentSpeed;
 [DynamicRange(0f, "MaxSpeed")]
 public float BoostSpeed;
 
-// Constant range (same as [Range] but explicit)
+// Constant range (same as [Range] but explicit)[README.md](../../../../README.md)
 [DynamicRange(0f, 100f)]
 public float Health;
 ```
@@ -118,24 +118,9 @@ public Sprite Background;
 
 ---
 
-## AtlasDefinition - Sprite Atlas utility asset
-
-**File:** `AtlasDefinition.cs`
-
-A `ScriptableObject` that pairs a `SpriteAtlas` with a flat list of sprites. Useful for editor tooling that needs to populate or inspect an atlas.
-
-```csharp
-// Create via: right-click → Create → AtlasDefinition
-public SpriteAtlas BoundAtlas;
-public bool CleanFirst = true;
-public List<Sprite> Sprites;
-```
-
----
-
 ## Odin Inspector compatibility
 
 All attributes work with and without Odin Inspector installed.
 
 - When `ODIN_INSPECTOR` is defined, `[Button]` inherits from Odin's own `ButtonAttribute` so Odin renders it natively — no double-drawing.
-- `[ShowIf]`, `[DynamicRange]`, and `[SpritePreview]` use standard `PropertyDrawer` and are unaffected by Odin.
+- `[ShowIf]`, `[DynamicRange]`, and `[SpritePreview]` use standard `PropertyDrawer` and are unaffected by Odin.[README.md](../../../../README.md)

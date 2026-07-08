@@ -274,6 +274,8 @@ namespace Cadi.Scripts.UI.FX
         // Internal helpers
         // ---------------------------
 
+        private static readonly Vector3[] s_Corners = new Vector3[4];
+
         private bool TryWorldToLocalCanvas(RectTransform target, Camera uiCamera, out Vector2 localPos)
         {
             localPos = default;
@@ -281,10 +283,9 @@ namespace Cadi.Scripts.UI.FX
             if (uiCamera == null)
                 uiCamera = m_RenderMode == RenderMode.ScreenSpaceCamera ? m_UICanvas.worldCamera : null;
 
-            Vector3[] corners = new Vector3[4];
-            target.GetWorldCorners(corners);
+            target.GetWorldCorners(s_Corners);
 
-            Vector3 worldCenter = (corners[0] + corners[2]) * 0.5f;
+            Vector3 worldCenter = (s_Corners[0] + s_Corners[2]) * 0.5f;
             Vector2 screen = RectTransformUtility.WorldToScreenPoint(uiCamera, worldCenter);
 
             return RectTransformUtility.ScreenPointToLocalPointInRectangle(m_CanvasRect, screen, uiCamera, out localPos);
@@ -314,7 +315,7 @@ namespace Cadi.Scripts.UI.FX
             uIFxImg.FinFout( orderInLayer,duration, color, ReturnPooledFxImage);
         }
 
-        private Dictionary<UIFxType, FXGraphix> m_SingleImages = new();
+        private readonly Dictionary<UIFxType, FXGraphix> m_SingleImages = new();
 
         private FXGraphix GetSingleImage(UIFxType type)
         {

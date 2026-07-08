@@ -65,7 +65,7 @@ namespace Cadi.Scripts.UI.FX
             gameObject.SetActive(true);
 
             SetOrder(orderInLayer);
-            StartCoroutine(CoFinFout(duration, color, onComplete));
+            m_Routine = StartCoroutine(CoFinFout(duration, color, onComplete));
         }
 
         private IEnumerator CoFinFout(float duration, Color color, Action<FXGraphix> onComplete)
@@ -113,10 +113,10 @@ namespace Cadi.Scripts.UI.FX
             m_Slot.SetColor(new Color(color.r, color.g, color.b, 0f));
             gameObject.SetActive(true);
             SetOrder(orderInLayer);
-            StartCoroutine(CoFin(duration, color, onComplete));
+            m_Routine = StartCoroutine(CoFin(duration, color, onComplete));
         }
 
-        private IEnumerator CoFin(float duration, Color color, Action onComplete = null)
+        private IEnumerator CoFin(float duration, Color color, Action onComplete)
         {
             float fadeIn = Mathf.Min(0.12f, duration * 0.25f);
 
@@ -128,6 +128,8 @@ namespace Cadi.Scripts.UI.FX
                 m_Slot.SetColor(new Color(color.r, color.g, color.b, a));
                 yield return null;
             }
+
+            onComplete?.Invoke();
         }
         
         private void StopFxRoutine()

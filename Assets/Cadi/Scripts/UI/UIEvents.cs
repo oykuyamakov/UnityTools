@@ -6,7 +6,6 @@ namespace Cadi.Scripts.UI
 {
     public class UIEvents
     {
-
     }
 
     public class SGraphixSelectedEvent : Event<SGraphixSelectedEvent>
@@ -18,6 +17,13 @@ namespace Cadi.Scripts.UI
             var e = Rent();
             e.Selectix = selectix;
             return e;
+        }
+
+
+        protected override void Reset()
+        {
+            base.Reset();
+            Selectix = null;
         }
     }
 
@@ -31,6 +37,12 @@ namespace Cadi.Scripts.UI
             e.Selectix = selectix;
             return e;
         }
+
+        protected override void Reset()
+        {
+            base.Reset();
+            Selectix = null;
+        }
     }
 
     public class SGraphixCreatedEvent : Event<SGraphixCreatedEvent>
@@ -43,6 +55,12 @@ namespace Cadi.Scripts.UI
             e.Selectix = selectix;
             return e;
         }
-    }
 
+
+        protected override void Reset()
+        {
+            base.Reset();
+            Selectix = null;
+        }
+    }
 }

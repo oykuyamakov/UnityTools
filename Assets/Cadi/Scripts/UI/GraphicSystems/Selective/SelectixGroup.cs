@@ -1,22 +1,25 @@
 using System;
 using System.Collections.Generic;
 using Cadi.Scripts.CacherSystem;
-using Cadi.Scripts.CustomAttributes;
 using Cadi.Scripts.EventSystem;
 using Cadi.Scripts.UI.FX;
 using UnityEngine;
 using UnityEngine.UI;
 #if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
+#else
+using Cadi.Scripts.CustomAttributes;
 #endif
 
 namespace Cadi.Scripts.UI.GraphicSystems.Selective
 {
     public class SelectixGroup : CacherMonoBehaviour
-    {
-        [SerializeField, ShowIf(nameof(m_IsNested), (int)IsNested.Nested)]
+    {       
+        [SerializeField, ShowIf(nameof(m_IsNested), IsNested.Nested)]
 #if ODIN_INSPECTOR
         [FoldoutGroup("Settings"), OnValueChanged(nameof(OnSettingsChanged))]
+#else
+       [ShowIf(nameof(m_IsNested), (int)IsNested.Nested)]
 #endif
         private float m_Padding = 5;
 
@@ -26,9 +29,11 @@ namespace Cadi.Scripts.UI.GraphicSystems.Selective
 #endif
         private IsNested m_IsNested = IsNested.Single;
 
-        [SerializeField, ShowIf(nameof(m_IsNested), (int)IsNested.Nested)]
+        [SerializeField, ShowIf(nameof(m_IsNested), IsNested.Nested)]
 #if ODIN_INSPECTOR
         [FoldoutGroup("Setup"), OnValueChanged(nameof(OnSettingsChanged)), EnumToggleButtons]
+#else
+        [ShowIf(nameof(m_IsNested), (int)IsNested.Nested)]
 #endif
         protected SlotLoc m_MainContentSlot = GraphicSystems.SlotLoc.Child;
 
@@ -40,14 +45,15 @@ namespace Cadi.Scripts.UI.GraphicSystems.Selective
 
         [SerializeField]
 #if ODIN_INSPECTOR
-        [FoldoutGroup("Settings"),BoxGroup("Settings/Root Slot"),InlineProperty(LabelWidth =
- 68), OnValueChanged(nameof(OnSettingsChanged), true)]
+        [FoldoutGroup("Settings"),BoxGroup("Settings/Root Slot"),InlineProperty(LabelWidth = 68), OnValueChanged(nameof(OnSettingsChanged), true)]
 #endif
         private Slot m_RootSettings = new();
 
-        [SerializeField, ShowIf(nameof(m_IsNested), (int)IsNested.Nested)]
+        [SerializeField, ShowIf(nameof(m_IsNested), IsNested.Nested)]
 #if ODIN_INSPECTOR
         [OnValueChanged(nameof(OnSettingsChanged), true), FoldoutGroup("Settings"), BoxGroup("Settings/Child Slot"), InlineProperty]
+#else 
+        [ShowIf(nameof(m_IsNested), (int)IsNested.Nested)]
 #endif
         private SlotConfig m_ChildSetting = new();
 
@@ -168,6 +174,70 @@ namespace Cadi.Scripts.UI.GraphicSystems.Selective
             }
 #endif
         }
+#if UNITY_EDITOR
+        private void EnsureCorrectChildTypes()
+        {
+            Type targetType = m_IsNested == IsNested.Nested
+                ? typeof(NestedSelectix)
+                : typeof(Selectix);
+
+            for (int i = 0; i < m_SImages.Count; i++)
+            {
+                var image = m_SImages[i];
+
+                if (image == null)
+                    continue;
+
+                if (image.GetType() == targetType)
+                    continue;
+
+                ReplaceImageObject(i, targetType);
+            }
+        }
+
+        private void ReplaceImageObject(int index, Type targetType)
+        {
+            var oldImage = m_SImages[index];
+
+            if (oldImage == null)
+                return;
+
+            var oldGo = oldImage.gameObject;
+            var oldRect = oldGo.GetComponent<RectTransform>();
+
+            string objectName = oldGo.name;
+            int siblingIndex = oldGo.transform.GetSiblingIndex();
+            bool activeSelf = oldGo.activeSelf;
+
+            Vector2 anchorMin = oldRect != null ? oldRect.anchorMin : Vector2.zero;
+            Vector2 anchorMax = oldRect != null ? oldRect.anchorMax : Vector2.one;
+            Vector2 offsetMin = oldRect != null ? oldRect.offsetMin : Vector2.zero;
+            Vector2 offsetMax = oldRect != null ? oldRect.offsetMax : Vector2.zero;
+            Vector2 pivot = oldRect != null ? oldRect.pivot : new Vector2(0.5f, 0.5f);
+            Vector3 localScale = oldGo.transform.localScale;
+
+            UnityEditor.Undo.DestroyObjectImmediate(oldGo);
+
+            var newGo = new GameObject(objectName, typeof(RectTransform), targetType);
+            UnityEditor.Undo.RegisterCreatedObjectUndo(newGo, "Replace Selective Graphix");
+
+            newGo.transform.SetParent(transform, false);
+            newGo.transform.SetSiblingIndex(siblingIndex);
+            newGo.transform.localScale = localScale;
+            newGo.SetActive(activeSelf);
+
+            var newRect = newGo.GetComponent<RectTransform>();
+            newRect.anchorMin = anchorMin;
+            newRect.anchorMax = anchorMax;
+            newRect.offsetMin = offsetMin;
+            newRect.offsetMax = offsetMax;
+            newRect.pivot = pivot;
+
+            m_SImages[index] = newGo.GetComponent<Graphix>();
+
+            UnityEditor.EditorUtility.SetDirty(newGo);
+        }
+#endif
         
         [Button]
 #if ODIN_INSPECTOR
@@ -193,6 +263,10 @@ namespace Cadi.Scripts.UI.GraphicSystems.Selective
 
             ResolveReferences();
 
+            EnsureCorrectChildTypes();
+
+            ResolveReferences();
+            
             for (int i = m_SImages.Count; i < m_ChildCount; i++)
             {
                 Type childType = m_IsNested == IsNested.Nested

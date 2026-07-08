@@ -9,7 +9,7 @@
 ## Core Files
 
 - `Event.cs` - event base types, pooling, global/context send helpers,
-- `EventListenerCollection.cs` - stores listeners by event type and dispatches 
+- `EventHub.cs` - stores listeners by event type and dispatches 
 - `PriorityList.cs` - 
 
 ---
@@ -101,7 +101,7 @@ using (var evt = MyEvent.Rent()) { evt.SendGlobal(); }
 - `Target = null`
 - `IsConsumed = false`
 
-It is called from `Rent()` when an event is taken from the pool.
+It is called from `Return()` when an event is taken from the pool.
 
 This makes sure the event is in a clean state before it is reused.
 - `Reset()` is `protected`
@@ -608,7 +608,7 @@ It is more controlled than a simple event bus because events can be scoped by co
 ---
 
 # Usage Rules
-
+[README.md](../../../../README.md)
 ## Listener Rules
 
 - If you `AddListener`, make sure you `RemoveListener` when the object no longer needs it.
@@ -657,7 +657,7 @@ public class DamageEvent : Event<DamageEvent>
 ```csharp
 private void OnEnable()
 {
-    EventExtensions.AddListenerGlobal<DamageEvent>(OnDamageEvent, Priority.Normal);
+    EM.AddListenerGlobal<DamageEvent>(OnDamageEvent, Priority.Normal);
 }
 ```
 
@@ -668,7 +668,7 @@ private void OnEnable()
 ```csharp
 private void OnDisable()
 {
-    EventExtensions.RemoveListenerGlobal<DamageEvent>(OnDamageEvent);
+    EM.RemoveListenerGlobal<DamageEvent>(OnDamageEvent);
 }
 ```
 

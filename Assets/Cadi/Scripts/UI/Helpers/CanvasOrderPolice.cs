@@ -17,9 +17,6 @@ namespace Cadi.Scripts.UI
         [CachedField, SerializeField]
         protected Canvas m_SelfCanvas;
 
-        [CachedField, SerializeField]
-        protected Canvas m_CanvasGroup;
-
         [SerializeField]
         [CachedField(RefSearch.Children, includeInactive: true, required: false)]
         protected List<Canvas> m_CanvasRefs = new();

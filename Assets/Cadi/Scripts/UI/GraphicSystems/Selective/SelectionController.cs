@@ -50,6 +50,7 @@ namespace Cadi.Scripts.UI.GraphicSystems.Selective
         
         private ISelectix m_Owner;
         
+        [NonSerialized]
         private bool m_Subscribed;
         
         private bool m_ExposeSettings = false;
@@ -213,8 +214,7 @@ namespace Cadi.Scripts.UI.GraphicSystems.Selective
             
             if (GroupSet && m_Group != group)
             {
-                Unsubscribe();
-                Debug.Log($"WTF.");
+                Debug.LogWarning($"selectix with 2 groups not allowed");
                 return;
             }
         

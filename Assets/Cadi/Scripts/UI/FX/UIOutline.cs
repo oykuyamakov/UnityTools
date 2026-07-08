@@ -114,13 +114,7 @@ namespace Cadi.Scripts.UI.FX
         public void SetOutlineColor(Color color, float width = 8f)
         {
             m_OutlineColor = color;
-            SetOutlineWidth(width);
-            Apply();
-        }
-
-        private void SetOutlineWidth(float widthPx)
-        {
-            m_OutlineWidthPx = widthPx;
+            m_OutlineWidthPx = width;
             Apply();
         }
     }

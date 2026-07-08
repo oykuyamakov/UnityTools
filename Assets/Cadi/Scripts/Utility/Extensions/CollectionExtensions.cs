@@ -19,28 +19,12 @@ namespace Cadi.Scripts.Utility.Extensions
 
 		public static IEnumerable<T> RandomTake<T>(this IEnumerable<T> source, int n)
 		{
-			try
-			{
-				return source.OrderBy(el => UnityEngine.Random.Range(0, 999999)).Take(n);
-			}
-			catch (Exception)
-			{
-				return null;
-			}
+			return source.OrderBy(el => UnityEngine.Random.Range(0, 999999)).Take(n);
 		}
 
 		public static IEnumerable<T> Shuffle<T>(this IEnumerable<T> source)
 		{
 			return source.OrderBy(item => UnityEngine.Random.Range(0, 999999));
-		}
-
-		public static IEnumerable<T> TakeSafe<T>(this IEnumerable<T> source, int maxCount)
-		{
-			var count = source.Count();
-			if (count < maxCount)
-				maxCount = count;
-
-			return source.Take(maxCount);
 		}
 
 		public static IEnumerable<T> Except<T>(this IEnumerable<T> source, T element)
@@ -63,17 +47,18 @@ namespace Cadi.Scripts.Utility.Extensions
 		public static int LastIndexOf<T>(this IEnumerable<T> source, Func<T, bool> condition)
 		{
 			int i = 0;
+			int lastIndex = -1;
 			foreach (var item in source)
 			{
 				if (condition(item))
 				{
-					return i;
+					lastIndex = i;
 				}
 
 				i++;
 			}
 
-			return -1;
+			return lastIndex;
 		}
 
 		public static int FirstIndexOf<T>(this IEnumerable<T> source, Func<T, bool> condition, int startIndex)
@@ -118,7 +103,7 @@ namespace Cadi.Scripts.Utility.Extensions
 				else
 				{
 					TArg currentKey = selector(item);
-					if (currentKey.CompareTo(minKey) > 0)
+					if (currentKey.CompareTo(minKey) < 0)
 					{
 						minKey = currentKey;
 						minObj = item;
@@ -171,7 +156,7 @@ namespace Cadi.Scripts.Utility.Extensions
 
 		public static IEnumerable<T> NonDefault<T>(this IEnumerable<T> source)
 		{
-			return source.Where(item => !Equals(default, item));
+			return source.Where(item => !EqualityComparer<T>.Default.Equals(item, default));
 		}
 
 		public static T GetAndRemoveAt<T>(this IList<T> source, int index)
@@ -187,16 +172,6 @@ namespace Cadi.Scripts.Utility.Extensions
 			{
 				source.Remove(item);
 			}
-		}
-
-		public static T ArgMin<T, TArg>(this IEnumerable<T> source, Func<T, TArg> selector)
-		{
-			return source.Select(item => (selector(item), item)).Min().item;
-		}
-
-		public static T ArgMax<T, TArg>(this IEnumerable<T> source, Func<T, TArg> selector)
-		{
-			return source.Select(item => (selector(item), item)).Max().item;
 		}
 
 		public static void AddByCapacity<T>(this List<T> source, T element)
@@ -217,10 +192,7 @@ namespace Cadi.Scripts.Utility.Extensions
 		
 		public static void AddOrUpdate<TKey, TValue>(this IDictionary<TKey, TValue> source, TKey key, TValue value)
 		{
-			if(source.ContainsKey(key))
-				source[key] = value;
-			else
-				source.Add(key, value);
+			source[key] = value;
 		}
 	}
 }

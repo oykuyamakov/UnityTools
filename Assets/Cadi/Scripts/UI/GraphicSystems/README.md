@@ -6,6 +6,8 @@ GraphixSystem is a small UI framework for building selectable image grids, galle
 
 Define how a UI graphic should look in its default and selected states, choose whether it is a single-slot or nested-slot graphic, and let the group handle child creation, selection state, deselection, multi-select limits, visual updates, and optional selection FX.
 
+<br><br><img src="Docs~/slc1.gif" alt="ring" width="1000"><br><br>
+
 ```csharp
 public class GalleryExample : MonoBehaviour
 {
@@ -31,6 +33,7 @@ public class GalleryExample : MonoBehaviour
     }
 }
 ```
+
 
 
 ---
@@ -121,6 +124,8 @@ private GraphicRaycaster m_GraphicRaycaster;
 ```
 
 So the group owns its child graphics and has the UI infrastructure needed for pointer interaction.
+
+<br><br><img src="Docs~/slc2.gif" alt="slc2" width="1000"><br><br>
 
 ### 2. Choose the mode
 
