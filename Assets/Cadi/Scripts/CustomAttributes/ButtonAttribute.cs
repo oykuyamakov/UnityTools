@@ -1,5 +1,3 @@
-//#if UNITY_EDITOR
-
 using System;
 
 namespace Cadi.Scripts.CustomAttributes
@@ -30,5 +28,3 @@ namespace Cadi.Scripts.CustomAttributes
     }
 #endif
 }
-
-//#endif

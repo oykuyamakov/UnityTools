@@ -1,4 +1,4 @@
-﻿#if UNITY_EDITOR
+#if UNITY_EDITOR
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -11,59 +11,26 @@ using UnityEngine;
 
 namespace Cadi.Scripts.CacherSystem.Editor
 {
-#if ODIN_INSPECTOR
-    // -----------------------------------------------------------------------
-    // Attribute processor: automatically hides [CachedField] properties from
-    // Odin's main tree so they only appear in the custom cached foldout.
-    // -----------------------------------------------------------------------
-    public sealed class CachedFieldAttributeProcessor : OdinAttributeProcessor<CacherMonoBehaviour>
+    internal sealed class CachedFieldInfo
     {
-        public override void ProcessChildMemberAttributes(
-            InspectorProperty parentProperty,
-            MemberInfo member,
-            List<Attribute> attributes)
-        {
-            if (member.GetCustomAttribute<CachedFieldAttribute>() != null)
-                attributes.Add(new HideInInspector());
-        }
+        public FieldInfo Field;
+        public CachedFieldAttribute Attr;
     }
 
-    // -----------------------------------------------------------------------
-    // Custom editor: lets Odin draw non-cached fields (with full attribute
-    // support), then appends the cached references foldout as IMGUI.
-    // -----------------------------------------------------------------------
-    [CustomEditor(typeof(CacherMonoBehaviour), true)]
-    [CanEditMultipleObjects]
-    public sealed class CacherEditor : OdinEditor
+    internal static class CacherEditorHelper
     {
-        private sealed class CachedFieldInfo
-        {
-            public FieldInfo Field;
-            public CachedFieldAttribute Attr;
-        }
-
         private static readonly Dictionary<Type, List<CachedFieldInfo>> s_CachedFieldsByType = new();
+        private static readonly Dictionary<Type, List<string>> s_WarningCacheByType = new();
 
-        private static readonly GUIContent s_CachedHeader = new("Cached References");
-        private static readonly GUIContent s_ResolveNow = new("Resolve Now");
-        private static readonly GUIContent s_ShowMeta = new("Show meta");
+        internal static readonly GUIContent s_CachedHeader = new("Cached References");
+        internal static readonly GUIContent s_ResolveNow = new("Resolve Now");
+        internal static readonly GUIContent s_ShowMeta = new("Show meta");
 
-        private bool m_ShowMeta;
-
-        protected override void DrawTree()
+        internal static void DrawCachedSection(
+            UnityEditor.Editor editor,
+            ref bool showMeta)
         {
-            // Odin draws everything; cached fields are already hidden
-            // by CachedFieldAttributeProcessor above.
-            base.DrawTree();
-
-            EditorGUILayout.Space(8);
-            DrawCachedSection();
-            GUILayout.Space(10);
-        }
-
-        private void DrawCachedSection()
-        {
-            var t0 = (CacherMonoBehaviour)target;
+            var t0 = editor.target as CacherMonoBehaviour;
             if (t0 == null)
                 return;
 
@@ -84,16 +51,10 @@ namespace Cadi.Scripts.CacherSystem.Editor
 
                     GUILayout.FlexibleSpace();
 
-                    m_ShowMeta = GUILayout.Toggle(m_ShowMeta, s_ShowMeta, EditorStyles.miniButton);
+                    showMeta = GUILayout.Toggle(showMeta, s_ShowMeta, EditorStyles.miniButton);
 
-                    using (new EditorGUI.DisabledScope(targets.Length != 1 &&
-                                                       serializedObject.isEditingMultipleObjects))
-                    {
-                        if (GUILayout.Button(s_ResolveNow, EditorStyles.miniButton))
-                        {
-                            ResolveSelected();
-                        }
-                    }
+                    if (GUILayout.Button(s_ResolveNow, EditorStyles.miniButton))
+                        ResolveSelected(editor);
                 }
 
                 SessionState.SetBool(foldoutKey, expanded);
@@ -103,13 +64,13 @@ namespace Cadi.Scripts.CacherSystem.Editor
 
                 EditorGUILayout.Space(4);
 
-                DrawStatusLine();
+                DrawStatusLine(editor);
 
                 var warnings = GetCachedFieldWarnings(type);
                 if (warnings.Count > 0)
                 {
-                    string msg = string.Join("\n• ", warnings);
-                    EditorGUILayout.HelpBox("CachedField configuration warnings:\n• " + msg, MessageType.Warning);
+                    string msg = string.Join("\n\u2022 ", warnings);
+                    EditorGUILayout.HelpBox("CachedField configuration warnings:\n\u2022 " + msg, MessageType.Warning);
 
                     Debug.LogWarning(
                         $"{type.Name} has {warnings.Count} CachedField configuration warnings. See Inspector for details.");
@@ -121,19 +82,19 @@ namespace Cadi.Scripts.CacherSystem.Editor
 
                 using (new EditorGUI.DisabledScope(true))
                 {
-                    DrawCachedFieldsReadOnly(cached);
+                    DrawCachedFieldsReadOnly(editor, cached, showMeta);
                 }
             }
         }
 
-        private void DrawStatusLine()
+        private static void DrawStatusLine(UnityEditor.Editor editor)
         {
             bool anyErrors = false;
             bool anyUnresolved = false;
 
-            for (int i = 0; i < targets.Length; i++)
+            for (int i = 0; i < editor.targets.Length; i++)
             {
-                var c = targets[i] as CacherMonoBehaviour;
+                var c = editor.targets[i] as CacherMonoBehaviour;
                 if (c == null)
                     continue;
 
@@ -150,32 +111,35 @@ namespace Cadi.Scripts.CacherSystem.Editor
             EditorGUILayout.LabelField(status, style);
         }
 
-        private void ResolveSelected()
+        private static void ResolveSelected(UnityEditor.Editor editor)
         {
-            Undo.RecordObjects(targets, "Resolve Cached References");
+            Undo.RecordObjects(editor.targets, "Resolve Cached References");
 
-            for (int i = 0; i < targets.Length; i++)
+            for (int i = 0; i < editor.targets.Length; i++)
             {
-                if (targets[i] is not CacherMonoBehaviour c || c == null)
+                if (editor.targets[i] is not CacherMonoBehaviour c || c == null)
                     continue;
 
                 c.ResolveReferences();
                 EditorUtility.SetDirty(c);
             }
 
-            serializedObject.Update();
-            Repaint();
+            editor.serializedObject.Update();
+            editor.Repaint();
         }
 
-        private void DrawCachedFieldsReadOnly(List<CachedFieldInfo> cached)
+        private static void DrawCachedFieldsReadOnly(
+            UnityEditor.Editor editor,
+            List<CachedFieldInfo> cached,
+            bool showMeta)
         {
-            serializedObject.Update();
+            editor.serializedObject.Update();
 
             for (int i = 0; i < cached.Count; i++)
             {
                 CachedFieldInfo info = cached[i];
 
-                SerializedProperty prop = serializedObject.FindProperty(info.Field.Name);
+                SerializedProperty prop = editor.serializedObject.FindProperty(info.Field.Name);
 
                 if (prop != null)
                 {
@@ -183,7 +147,7 @@ namespace Cadi.Scripts.CacherSystem.Editor
                     {
                         EditorGUILayout.PropertyField(prop, includeChildren: true);
 
-                        if (m_ShowMeta)
+                        if (showMeta)
                             DrawMeta(info.Attr);
                     }
 
@@ -191,16 +155,16 @@ namespace Cadi.Scripts.CacherSystem.Editor
                     continue;
                 }
 
-                object value = info.Field.GetValue(target);
+                object value = info.Field.GetValue(editor.target);
                 DrawFallbackValue(info.Field, value);
 
-                if (m_ShowMeta)
+                if (showMeta)
                     DrawMeta(info.Attr);
 
                 EditorGUILayout.Space(2);
             }
 
-            serializedObject.ApplyModifiedProperties();
+            editor.serializedObject.ApplyModifiedProperties();
         }
 
         private static void DrawMeta(CachedFieldAttribute attr)
@@ -230,17 +194,10 @@ namespace Cadi.Scripts.CacherSystem.Editor
                 return;
             }
 
-            if (value is Array arr)
-            {
-                EditorGUILayout.LabelField(label, $"{field.FieldType.Name} (Length: {arr.Length})",
-                    EditorStyles.miniLabel);
-                return;
-            }
-
             EditorGUILayout.LabelField(label, value != null ? value.ToString() : "null");
         }
 
-        private static List<CachedFieldInfo> GetCachedFields(Type type)
+        internal static List<CachedFieldInfo> GetCachedFields(Type type)
         {
             if (s_CachedFieldsByType.TryGetValue(type, out var cached))
                 return cached;
@@ -283,8 +240,6 @@ namespace Cadi.Scripts.CacherSystem.Editor
             return list;
         }
 
-        private static readonly Dictionary<Type, List<string>> s_WarningCacheByType = new();
-
         private static List<string> GetCachedFieldWarnings(Type inspectedRuntimeType)
         {
             if (s_WarningCacheByType.TryGetValue(inspectedRuntimeType, out var cached))
@@ -318,6 +273,86 @@ namespace Cadi.Scripts.CacherSystem.Editor
 
             s_WarningCacheByType[inspectedRuntimeType] = warnings;
             return warnings;
+        }
+    }
+
+#if ODIN_INSPECTOR
+    public sealed class CachedFieldAttributeProcessor : OdinAttributeProcessor<CacherMonoBehaviour>
+    {
+        public override void ProcessChildMemberAttributes(
+            InspectorProperty parentProperty,
+            MemberInfo member,
+            List<Attribute> attributes)
+        {
+            if (member.GetCustomAttribute<CachedFieldAttribute>() != null)
+                attributes.Add(new HideInInspector());
+        }
+    }
+
+    [CustomEditor(typeof(CacherMonoBehaviour), true)]
+    [CanEditMultipleObjects]
+    public sealed class CacherEditor : OdinEditor
+    {
+        private bool m_ShowMeta;
+
+        protected override void DrawTree()
+        {
+            base.DrawTree();
+
+            EditorGUILayout.Space(8);
+            CacherEditorHelper.DrawCachedSection(this, ref m_ShowMeta);
+            GUILayout.Space(10);
+        }
+    }
+#else
+    [CustomEditor(typeof(CacherMonoBehaviour), true)]
+    [CanEditMultipleObjects]
+    public sealed class CacherEditor : UnityEditor.Editor
+    {
+        private bool m_ShowMeta;
+        private HashSet<string> m_CachedFieldNames;
+
+        private void OnEnable()
+        {
+            var t0 = target as CacherMonoBehaviour;
+            if (t0 == null)
+                return;
+
+            var cached = CacherEditorHelper.GetCachedFields(t0.GetType());
+            m_CachedFieldNames = new HashSet<string>(cached.Count);
+            for (int i = 0; i < cached.Count; i++)
+                m_CachedFieldNames.Add(cached[i].Field.Name);
+        }
+
+        public override void OnInspectorGUI()
+        {
+            serializedObject.Update();
+
+            SerializedProperty prop = serializedObject.GetIterator();
+            bool enterChildren = true;
+
+            while (prop.NextVisible(enterChildren))
+            {
+                enterChildren = false;
+
+                if (prop.name == "m_Script")
+                {
+                    using (new EditorGUI.DisabledScope(true))
+                        EditorGUILayout.PropertyField(prop);
+                    continue;
+                }
+
+                if (m_CachedFieldNames != null && m_CachedFieldNames.Contains(prop.name))
+                    continue;
+
+                EditorGUILayout.PropertyField(prop, includeChildren: true);
+            }
+
+            serializedObject.ApplyModifiedProperties();
+
+            EditorGUILayout.Space(8);
+            CacherEditorHelper.DrawCachedSection(this, ref m_ShowMeta);
+            GUILayout.Space(10);
         }
     }
 #endif

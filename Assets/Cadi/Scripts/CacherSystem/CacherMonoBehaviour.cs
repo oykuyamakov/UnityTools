@@ -32,7 +32,6 @@ namespace Cadi.Scripts.CacherSystem
     {
         bool IsResolved { get; }
         void ResolveReferences();
-
     }
 
     public enum RefSearch
@@ -41,7 +40,7 @@ namespace Cadi.Scripts.CacherSystem
         Parent,
         Children
     }
-    
+
 
     public abstract class CacherMonoBehaviour : MonoBehaviour, IAutoReferenceResolver
     {
@@ -49,9 +48,11 @@ namespace Cadi.Scripts.CacherSystem
         private bool m_IsResolved;
 
         private bool m_LastResolveHadErrors;
+        private bool m_LastResolveChangedAnything;
         
         public bool IsResolved => m_IsResolved;
         public bool LastResolveHadErrors => m_LastResolveHadErrors;
+        public bool LastResolveChangedAnything => m_LastResolveChangedAnything;
 
         private static readonly Dictionary<Type, List<FieldBinding>> s_BindingsCache = new();
 
@@ -74,50 +75,84 @@ namespace Cadi.Scripts.CacherSystem
             OnAwake();
         }
 
+        // Is Resolved is serialzed a
         protected virtual void OnAwake()
         {
-            if (m_IsResolved && !HasMissingRequiredRefs()) 
-                return;
-            
-            Debug.LogWarning($"{name} ({GetType().Name}) has missing references - Resolving references", this);
-                
+            if (m_IsResolved)
+            {
+                if (!HasMissingRequiredRefs())
+                    return;
+
+                // Was resolved in editor but a ref is now genuinely broken — worth shouting about.
+                Debug.LogWarning($"{name} ({GetType().Name}) has missing references - Resolving references", this);
+            }
+            // else: never resolved (runtime-created, not from a prefab) - expected, resolve silently.
+
             ResolveReferences();
         }
         
         public virtual void ResolveReferences()
         {
             m_LastResolveHadErrors = false;
+            m_LastResolveChangedAnything = false;
             ResolveAllAttributedFields();
-            m_IsResolved = !m_LastResolveHadErrors;
-        }
 
+            bool newResolved = !m_LastResolveHadErrors;
+            if (newResolved != m_IsResolved)
+            {
+                m_IsResolved = newResolved;
+                m_LastResolveChangedAnything = true; // serialized flag changed too
+            }
+        }
+        
 #if UNITY_EDITOR
+        
+        private bool m_EditorResolvePending;
 
-        //Reset is only called in Edit mode. If you add components at runtime, Reset won't be called.
-        private  void Reset()
+        private void Reset()
         {
-            ResolveReferences();
-
+            RequestEditorResolve();
             OnReset();
-        }
-
-        protected virtual void OnReset()
-        {
-            
         }
 
         private void OnValidate()
         {
-            ResolveReferences();
-            
+            RequestEditorResolve();
             OnValidated();
+        }
+
+        private void RequestEditorResolve()
+        {
+            if (m_EditorResolvePending)
+                return;
+
+            m_EditorResolvePending = true;
+            UnityEditor.EditorApplication.delayCall += EditorDeferredResolve;
+        }
+
+        private void EditorDeferredResolve()
+        {
+            m_EditorResolvePending = false;
+
+            // Destroyed between OnValidate and delayCall (undo, scene close, etc.)
+            if (this == null)
+                return;
+
+            ResolveReferences();
+
+            if (Application.isPlaying)
+                return;
+            if(m_LastResolveChangedAnything)
+                UnityEditor.EditorUtility.SetDirty(this);
+        }
+#endif
+        protected virtual void OnReset()
+        {
         }
 
         protected virtual void OnValidated()
         {
-          
         }
-#endif
 
         private void ResolveAllAttributedFields()
         {
@@ -125,10 +160,16 @@ namespace Cadi.Scripts.CacherSystem
 
             foreach (var b in bindings)
             {
+                object oldValue = b.Field.GetValue(this);
+                
                 if (b.IsArray)
                 {
                     Array arr = ResolveArray(b.ElementType, b.Attr);
-                    b.Field.SetValue(this, arr);
+                    if (!SequenceEquals(oldValue as IList, arr))
+                    {
+                        b.Field.SetValue(this, arr);
+                        m_LastResolveChangedAnything = true;
+                    }
                     ValidateRequired(b, arr);
                     continue;
                 }
@@ -136,15 +177,53 @@ namespace Cadi.Scripts.CacherSystem
                 if (b.IsList)
                 {
                     object listObj = ResolveList(b.Field.FieldType, b.ElementType, b.Attr);
-                    b.Field.SetValue(this, listObj);
+                    if (!SequenceEquals(oldValue as IList, listObj as IList))
+                    {
+                        b.Field.SetValue(this, listObj);
+                        m_LastResolveChangedAnything = true;
+                    }
+
                     ValidateRequired(b, listObj as IList);
                     continue;
                 }
 
                 UnityEngine.Object resolved = ResolveSingle(b.Field.FieldType, b.Attr);
-                b.Field.SetValue(this, resolved);
+                if (!ReferenceEquals(oldValue, resolved))
+                {
+                    // Unity fake-null: a destroyed ref and a genuinely-null resolve
+                    // are "equal" for our purposes only if both are null-ish.
+                    var oldObj = oldValue as UnityEngine.Object;
+                    bool bothNull = oldObj == null && resolved == null;
+                    if (!bothNull)
+                    {
+                        b.Field.SetValue(this, resolved);
+                        m_LastResolveChangedAnything = true;
+                    }
+                }
                 ValidateRequired(b, resolved);
+                continue;
             }
+        }
+        
+        private static bool SequenceEquals(IList a, IList b)
+        {
+            if (a == null || b == null)
+                return a == b;
+
+            if (a.Count != b.Count)
+                return false;
+
+            for (int i = 0; i < a.Count; i++)
+            {
+                var ao = a[i] as UnityEngine.Object;
+                var bo = b[i] as UnityEngine.Object;
+
+                // Same instance, or both Unity-null (destroyed/missing counts as null)
+                if (!ReferenceEquals(a[i], b[i]) && !(ao == null && bo == null))
+                    return false;
+            }
+
+            return true;
         }
 
         private bool HasMissingRequiredRefs()
@@ -189,9 +268,13 @@ namespace Cadi.Scripts.CacherSystem
 
             return false;
         }
-        
+
         private bool ShouldAddComponentIfMissing(CachedFieldAttribute attr)
         {
+#if UNITY_EDITOR
+            if (UnityEditor.EditorUtility.IsPersistent(this))
+                return false; // never mutate prefab assets implicitly; adds happen on instances / in prefab stage
+#endif
             if (attr.AddComponentIfMissing)
                 return true;
 
@@ -203,7 +286,7 @@ namespace Cadi.Scripts.CacherSystem
             FieldInfo f = FindFieldInHierarchy(GetType(), attr.AddComponentIfMissingBoundToBoolField, flags);
             if (f != null && f.FieldType == typeof(bool))
                 return (bool)f.GetValue(this);
-            
+
             //the bool field to add if missing is not found or not bool, log error and return false
 #if UNITY_EDITOR
             Debug.LogError(
@@ -211,7 +294,6 @@ namespace Cadi.Scripts.CacherSystem
                 this);
 #endif
             return false;
-
         }
 
         private static FieldInfo FindFieldInHierarchy(Type type, string fieldName, BindingFlags flags)
@@ -223,6 +305,7 @@ namespace Cadi.Scripts.CacherSystem
                 if (f != null) return f;
                 cur = cur.BaseType;
             }
+
             return null;
         }
 

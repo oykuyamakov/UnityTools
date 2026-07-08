@@ -27,7 +27,6 @@ namespace Cadi.Scripts.CustomAttributes.Editor
         {
             var attr = (SpritePreviewAttribute)attribute;
 
-            // Draw the object field
             var line = new Rect(position.x, position.y, position.width, EditorGUIUtility.singleLineHeight);
             EditorGUI.PropertyField(line, property, label);
 

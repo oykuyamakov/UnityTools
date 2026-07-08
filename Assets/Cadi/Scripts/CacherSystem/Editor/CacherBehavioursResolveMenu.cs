@@ -17,7 +17,7 @@ namespace Cadi.Scripts.CacherSystem.Editor
         {
             if (!EditorUtility.DisplayDialog(
                     "Resolve Auto References",
-                    "This will open each enabled Build Settings scene, resolve [AutoCachedField] references, and optionally save the scenes.\n\nProceed?",
+                    "This will open each enabled Build Settings scene, resolve [CachedField] references, and optionally save the scenes.\n\nProceed?",
                     "Proceed",
                     "Cancel"))
             {
@@ -90,7 +90,7 @@ namespace Cadi.Scripts.CacherSystem.Editor
         {
             if (!EditorUtility.DisplayDialog(
                     "Resolve Auto References",
-                    "This will resolve [AutoCachedField] references in all currently open scenes.\n\nProceed?",
+                    "This will resolve [CachedField] references in all currently open scenes.\n\nProceed?",
                     "Proceed",
                     "Cancel"))
             {

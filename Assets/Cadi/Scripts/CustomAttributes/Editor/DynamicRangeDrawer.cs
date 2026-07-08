@@ -108,7 +108,6 @@ namespace Cadi.Scripts.CustomAttributes.Editor
             // Example paths:
             //  "jointAnchors.Array.data[0].StepDist"
             //  "someStruct.DistanceFromRootUp"
-            // We want to replace the last segment with fieldName.
 
             string path = property.propertyPath;
 

@@ -148,7 +148,7 @@ namespace Cadi.Scripts.CustomAttributes.Editor
                         return false;
                     }
 
-                    // enumValueIndex değil; intValue = underlying enum value
+                    // enumValueIndex not; intValue = underlying enum value
                     equals = conditionProp.intValue == attr.IntValue;
                     return true;
                 }

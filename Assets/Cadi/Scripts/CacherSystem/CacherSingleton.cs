@@ -79,15 +79,12 @@ namespace Cadi.Scripts.CacherSystem
             go.AddComponent<T>();
         }
 
-        // ---- SEALED UNITY ENTRY POINT ----
-        // Derived classes should NOT override Awake.
-        protected  void Awake()
+        protected sealed override void OnAwake()
         {
             if (!SingletonAwakeInternal())
-            {
-                return;
-            }
+                return;            // duplicate — skip resolution, we're being destroyed
 
+            base.OnAwake();        // reference resolution
             OnSingletonAwake();
         }
 
@@ -142,6 +139,12 @@ namespace Cadi.Scripts.CacherSystem
         /// </summary>
         protected virtual void OnSingletonDestroyed()
         {
+        }
+        
+        private static void ResetStatics()
+        {
+            s_Instance = null;
+            s_IsQuitting = false;
         }
     }
 }
