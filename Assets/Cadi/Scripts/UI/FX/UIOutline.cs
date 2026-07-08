@@ -36,11 +36,11 @@ namespace Cadi.Scripts.UI.FX
         [SerializeField]
         private Material m_MatInstance;
 
-        private static readonly int OutlineColorId = Shader.PropertyToID("_OutlineColor");
-        private static readonly int OutlineWidthId = Shader.PropertyToID("_OutlineWidth");
-        private static readonly int AlphaThresholdId = Shader.PropertyToID("_AlphaThreshold");
-        private static readonly int InwardBlend = Shader.PropertyToID("_InwardBlend");
-        private static readonly int OutlineMode = Shader.PropertyToID("_OutlineMode");
+        private static readonly int s_OutlineColorId = Shader.PropertyToID("_OutlineColor");
+        private static readonly int s_OutlineWidthId = Shader.PropertyToID("_OutlineWidth");
+        private static readonly int s_AlphaThresholdId = Shader.PropertyToID("_AlphaThreshold");
+        private static readonly int s_InwardBlend = Shader.PropertyToID("_InwardBlend");
+        private static readonly int s_OutlineMode = Shader.PropertyToID("_OutlineMode");
 
         public override void ResolveReferences()
         {
@@ -86,11 +86,11 @@ namespace Cadi.Scripts.UI.FX
             if (m_MatInstance == null)
                 return;
 
-            m_MatInstance.SetFloat( OutlineMode, m_Inward ? 1f : 0f);
-            m_MatInstance.SetFloat(InwardBlend, m_InwardBlend);
-            m_MatInstance.SetColor(OutlineColorId, m_OutlineColor);
-            m_MatInstance.SetFloat(OutlineWidthId, m_OutlineWidthPx);
-            m_MatInstance.SetFloat(AlphaThresholdId, m_AlphaThreshold);
+            m_MatInstance.SetFloat( s_OutlineMode, m_Inward ? 1f : 0f);
+            m_MatInstance.SetFloat(s_InwardBlend, m_InwardBlend);
+            m_MatInstance.SetColor(s_OutlineColorId, m_OutlineColor);
+            m_MatInstance.SetFloat(s_OutlineWidthId, m_OutlineWidthPx);
+            m_MatInstance.SetFloat(s_AlphaThresholdId, m_AlphaThreshold);
         }
         
         

@@ -141,7 +141,7 @@ namespace Cadi.Scripts.UI.GraphicSystems
         // Protected editor utilities (used by subclasses)
         // -----------------------------------------------------------
 
-        protected static void EnsureGraphic(GameObject host, GraphicType type)
+        private static void EnsureGraphic(GameObject host, GraphicType type)
         {
             if (host.GetComponent<Graphic>() != null)
                 return;
@@ -157,7 +157,7 @@ namespace Cadi.Scripts.UI.GraphicSystems
             }
         }
 
-        protected static void CorrectType(GameObject host, GraphicType type)
+        private static void CorrectType(GameObject host, GraphicType type)
         {
             var current = host.GetComponent<Graphic>();
             if (current == null)
@@ -194,7 +194,7 @@ namespace Cadi.Scripts.UI.GraphicSystems
             };
         }
 
-        protected static void BindSlot(Slot slot, GameObject host)
+        private static void BindSlot(Slot slot, GameObject host)
         {
             slot.Bind(
                 host.GetComponent<Graphic>(),
@@ -202,7 +202,7 @@ namespace Cadi.Scripts.UI.GraphicSystems
             );
         }
 
-        protected static void SyncOutline(Slot slot, GameObject host)
+        private static void SyncOutline(Slot slot, GameObject host)
         {
             if (slot.UseOutline)
             {

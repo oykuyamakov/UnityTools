@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using System;
 using System.Reflection;
 using UnityEditor;
@@ -5,7 +6,6 @@ using UnityEngine;
 
 namespace Cadi.Scripts.CustomAttributes.Editor
 {
-#if UNITY_EDITOR
     [CustomPropertyDrawer(typeof(ShowIfAttribute), true)]
     public class ShowIfDrawer : PropertyDrawer
     {
@@ -39,18 +39,24 @@ namespace Cadi.Scripts.CustomAttributes.Editor
             {
                 if (property.propertyType == SerializedPropertyType.Integer)
                 {
-                    int v = property.intValue;
-                    v = EditorGUI.IntSlider(position, label, v, Mathf.RoundToInt(range.min),
-                        Mathf.RoundToInt(range.max));
-                    property.intValue = v;
+                    EditorGUI.BeginProperty(position, label, property);
+                    EditorGUI.BeginChangeCheck();
+                    int v = EditorGUI.IntSlider(position, label, property.intValue,
+                        Mathf.RoundToInt(range.min), Mathf.RoundToInt(range.max));
+                    if (EditorGUI.EndChangeCheck())
+                        property.intValue = v;
+                    EditorGUI.EndProperty();
                     return;
                 }
 
                 if (property.propertyType == SerializedPropertyType.Float)
                 {
-                    float v = property.floatValue;
-                    v = EditorGUI.Slider(position, label, v, range.min, range.max);
-                    property.floatValue = v;
+                    EditorGUI.BeginProperty(position, label, property);
+                    EditorGUI.BeginChangeCheck();
+                    float v = EditorGUI.Slider(position, label, property.floatValue, range.min, range.max);
+                    if (EditorGUI.EndChangeCheck())
+                        property.floatValue = v;
+                    EditorGUI.EndProperty();
                     return;
                 }
             }
@@ -326,5 +332,5 @@ namespace Cadi.Scripts.CustomAttributes.Editor
             return false;
         }
     }
-#endif
 }
+#endif

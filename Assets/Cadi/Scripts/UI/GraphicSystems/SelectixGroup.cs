@@ -15,7 +15,7 @@ using UnityEngine.UI;
 
 namespace Cadi.Scripts.UI.GraphicSystems
 {
-    public class SelectiveGraphixGroup : CacherMonoBehaviour
+    public class SelectixGroup : CacherMonoBehaviour
     {
         [SerializeField, ShowIf(nameof(m_IsNested), (int)IsNested.Nested)]
 #if ODIN_INSPECTOR
@@ -122,9 +122,9 @@ namespace Cadi.Scripts.UI.GraphicSystems
         [CachedField(addComponentIfMissing: true), SerializeField]
         protected GraphicRaycaster m_GraphicRaycaster;
 
-        private readonly HashSet<ISelectiveGraphix> m_SelectedImages = new();
+        private readonly HashSet<ISelectix> m_SelectedImages = new();
 
-        public Action<ISelectiveGraphix, bool> OnImage;
+        public Action<ISelectix, bool> OnImage;
         public int SortingOrder => m_Canvas.sortingOrder;
 
         // -----------------------------------------------------------
@@ -199,8 +199,8 @@ namespace Cadi.Scripts.UI.GraphicSystems
             for (int i = m_SImages.Count; i < m_ChildCount; i++)
             {
                 Type childType = m_IsNested == IsNested.Nested
-                    ? typeof(NestedSelectiveGraphix)
-                    : typeof(SelectiveGraphix);
+                    ? typeof(NestedSelectix)
+                    : typeof(Selectix);
 
                 var go = new GameObject($"SImage_{i}", typeof(RectTransform), childType);
                 UnityEditor.Undo.RegisterCreatedObjectUndo(go, "Create Selective Graphix");
@@ -230,7 +230,7 @@ namespace Cadi.Scripts.UI.GraphicSystems
                 if (image == null)
                     continue;
 
-                var selective = image as ISelectiveGraphix;
+                var selective = image as ISelectix;
                 if (selective == null)
                     continue;
 
@@ -265,7 +265,7 @@ namespace Cadi.Scripts.UI.GraphicSystems
                 var image = m_SImages[i];
                 image.gameObject.SetActive(true);
 
-                if (image is NestedGraphix or NestedSelectiveGraphix)
+                if (image is NestedGraphix or NestedSelectix)
                 {
                     var nested = image as NestedGraphix;
                     nested.SetContent(
@@ -308,7 +308,7 @@ namespace Cadi.Scripts.UI.GraphicSystems
         {
             for (int i = 0; i < m_SImages.Count; i++)
             {
-                var selective = m_SImages[i] as ISelectiveGraphix;
+                var selective = m_SImages[i] as ISelectix;
                 selective?.SetGroup(i, this);
             }
         }
@@ -317,7 +317,7 @@ namespace Cadi.Scripts.UI.GraphicSystems
         {
             foreach (var image in m_SImages)
             {
-                if (image is ISelectiveGraphix selective)
+                if (image is ISelectix selective)
                     selective.TryDeselect();
             }
         }
@@ -326,7 +326,7 @@ namespace Cadi.Scripts.UI.GraphicSystems
         {
             foreach (var image in m_SImages)
             {
-                if (image is ISelectiveGraphix selective)
+                if (image is ISelectix selective)
                     selective.UnLock();
             }
         }
@@ -335,7 +335,7 @@ namespace Cadi.Scripts.UI.GraphicSystems
         {
             foreach (var image in m_SImages)
             {
-                if (image is ISelectiveGraphix selective)
+                if (image is ISelectix selective)
                     selective.Lock(disableVis);
             }
         }
@@ -350,10 +350,10 @@ namespace Cadi.Scripts.UI.GraphicSystems
 
         protected virtual void OnSImageSelected(SGraphixSelectedEvent evt)
         {
-            var sImage = evt.SelectiveGraphix;
+            var sImage = evt.Selectix;
             if (m_SelectedImages.Contains(sImage))
             {
-                Debug.LogWarning($"Image {sImage.name} is already selected in group {this.name}");
+                Debug.LogWarning($"Image {sImage.RuntimeID} is already selected in group {this.name}");
                 return;
             }
 
@@ -369,7 +369,7 @@ namespace Cadi.Scripts.UI.GraphicSystems
 
         protected virtual void OnSImageDeselected(SGraphixDeselectedEvent evt)
         {
-            var sImage = evt.SelectiveGraphix;
+            var sImage = evt.Selectix;
             if (!m_SelectedImages.Remove(sImage))
                 return;
 

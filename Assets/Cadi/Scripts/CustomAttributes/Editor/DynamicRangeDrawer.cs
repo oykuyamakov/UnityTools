@@ -24,9 +24,12 @@ namespace Cadi.Scripts.CustomAttributes.Editor
 
             if (property.propertyType == SerializedPropertyType.Float)
             {
-                float v = property.floatValue;
-                v = EditorGUI.Slider(position, label, v, min, max);
-                property.floatValue = Mathf.Clamp(v, min, max);
+                EditorGUI.BeginProperty(position, label, property);
+                EditorGUI.BeginChangeCheck();
+                float v = EditorGUI.Slider(position, label, property.floatValue, min, max);
+                if (EditorGUI.EndChangeCheck())
+                    property.floatValue = Mathf.Clamp(v, min, max);
+                EditorGUI.EndProperty();
                 return;
             }
 
@@ -36,13 +39,14 @@ namespace Cadi.Scripts.CustomAttributes.Editor
                 int imax = Mathf.RoundToInt(max);
 
                 if (imin > imax)
-                {
                     (imin, imax) = (imax, imin);
-                }
 
-                int v = property.intValue;
-                v = EditorGUI.IntSlider(position, label, v, imin, imax);
-                property.intValue = Mathf.Clamp(v, imin, imax);
+                EditorGUI.BeginProperty(position, label, property);
+                EditorGUI.BeginChangeCheck();
+                int v = EditorGUI.IntSlider(position, label, property.intValue, imin, imax);
+                if (EditorGUI.EndChangeCheck())
+                    property.intValue = Mathf.Clamp(v, imin, imax);
+                EditorGUI.EndProperty();
                 return;
             }
 

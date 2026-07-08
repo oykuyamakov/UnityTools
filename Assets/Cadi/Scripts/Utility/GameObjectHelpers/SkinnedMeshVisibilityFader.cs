@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-namespace CadiKazani.Scripts.Utility.GameObjectHelpers
+namespace Cadi.Scripts.Utility.GameObjectHelpers
 {
     public static class SkinnedMeshVisibilityFader
     {

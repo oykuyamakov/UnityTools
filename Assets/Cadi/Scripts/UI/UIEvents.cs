@@ -10,36 +10,36 @@ namespace Cadi.Scripts.UI
 
     public class SGraphixSelectedEvent : Event<SGraphixSelectedEvent>
     {
-        public ISelectiveGraphix SelectiveGraphix { get; private set; }
+        public ISelectix Selectix { get; private set; }
 
-        public static SGraphixSelectedEvent Rent(ISelectiveGraphix selectiveGraphix)
+        public static SGraphixSelectedEvent Rent(ISelectix selectix)
         {
             var e = Rent();
-            e.SelectiveGraphix = selectiveGraphix;
+            e.Selectix = selectix;
             return e;
         }
     }
 
     public class SGraphixDeselectedEvent : Event<SGraphixDeselectedEvent>
     {
-        public ISelectiveGraphix SelectiveGraphix { get; private set; }
+        public ISelectix Selectix { get; private set; }
 
-        public static SGraphixDeselectedEvent Rent(ISelectiveGraphix selectiveGraphix)
+        public static SGraphixDeselectedEvent Rent(ISelectix selectix)
         {
             var e = Rent();
-            e.SelectiveGraphix = selectiveGraphix;
+            e.Selectix = selectix;
             return e;
         }
     }
 
     public class SGraphixCreatedEvent : Event<SGraphixCreatedEvent>
     {
-        public ISelectiveGraphix SelectiveGraphix { get; private set; }
+        public ISelectix Selectix { get; private set; }
 
-        public static SGraphixCreatedEvent Rent(ISelectiveGraphix selectiveGraphix)
+        public static SGraphixCreatedEvent Rent(ISelectix selectix)
         {
             var e = Rent();
-            e.SelectiveGraphix = selectiveGraphix;
+            e.Selectix = selectix;
             return e;
         }
     }

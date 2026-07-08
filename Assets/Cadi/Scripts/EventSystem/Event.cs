@@ -48,7 +48,6 @@ namespace Cadi.Scripts.EventSystem
             {
                 var evt = s_Pool.Pop();
                 evt.m_IsInPool = false;
-                evt.Reset();
                 return evt;
             }
 
@@ -70,6 +69,8 @@ namespace Cadi.Scripts.EventSystem
         {
             if (evt.m_IsInPool)
                 throw new InvalidOperationException($"{typeof(T).Name} was returned to the pool more than once.");
+
+            evt.Reset();
 
             evt.m_IsInPool = true;
             s_Pool.Push(evt);

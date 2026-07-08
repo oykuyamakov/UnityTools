@@ -1,9 +1,10 @@
-# Cadi Custom Attributes Summary
+# Custom Attributes
 
 A collection of Unity inspector attributes that make the Inspector more useful without any extra setup. Includes 
 lightweight reimplementations of some handy Odin Inspector attributes, useful as a fallback when Odin isn't available.
 
 ---
+<br><br><img src="Docs~/customattributes.gif" alt="customattributes inspector" width="600">
 
 ## [Button] - Running methods from the Inspector
 

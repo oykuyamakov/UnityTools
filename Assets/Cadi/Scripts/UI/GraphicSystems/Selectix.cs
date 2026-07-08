@@ -7,7 +7,7 @@ using UnityEngine.EventSystems;
 
 namespace Cadi.Scripts.UI.GraphicSystems
 {
-    public class SelectiveGraphix : Graphix, IPointerDownHandler, ISelectiveGraphix
+    public class Selectix : Graphix, IPointerDownHandler, ISelectix
     {
         [SerializeField]
 #if ODIN_INSPECTOR
@@ -75,7 +75,7 @@ namespace Cadi.Scripts.UI.GraphicSystems
 
         public void TryDeselect() => m_Selection.TryDeselect();
 
-        public void SetGroup(int runtimeId, SelectiveGraphixGroup group)
+        public void SetGroup(int runtimeId, SelectixGroup group)
         {
             m_Selection.SetGroup(runtimeId, group);
             
@@ -85,7 +85,7 @@ namespace Cadi.Scripts.UI.GraphicSystems
         public void Init() =>
             m_Selection.BindToGraphix(this);
 
-        public void EditorBind(SelectiveGraphixGroup group)
+        public void EditorBind(SelectixGroup group)
         {
             if (group == null)
                 return;

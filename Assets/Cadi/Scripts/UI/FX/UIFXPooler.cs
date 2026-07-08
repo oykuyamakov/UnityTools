@@ -7,7 +7,7 @@ namespace Cadi.Scripts.UI.FX
 {
     [RequireComponent(typeof(Canvas))]
     [RequireComponent(typeof(CanvasScaler))]
-    public sealed class UIEffectPooler : CacherSingleton<UIEffectPooler>
+    public sealed class UIFXPooler : CacherSingleton<UIFXPooler>
     {
         [SerializeField]
         private int m_InitialPoolSize = 10;

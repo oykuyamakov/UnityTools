@@ -2,17 +2,22 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Cadi.Scripts.UI.Extensions
+namespace Cadi.Scripts.UI.Helpers
 {
     public class UISlicedSpriteAnimator : MonoBehaviour
     {
-        [SerializeField] private Sprite[] m_Sprites;
-        [SerializeField] private float m_Delay = 0.25f;
-        [SerializeField] private bool m_Loop = true;
+        [SerializeField]
+        private Sprite[] m_Sprites;
+
+        [SerializeField]
+        private float m_Delay = 0.25f;
+
+        [SerializeField]
+        private bool m_Loop = true;
 
         [SerializeField]
         private Image[] m_Images;
-        
+
         private Coroutine m_Coroutine;
 
         private void OnEnable()
@@ -33,7 +38,8 @@ namespace Cadi.Scripts.UI.Extensions
             {
                 Sprite sprite = m_Sprites[i];
 
-                GameObject go = new GameObject(sprite.name, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+                GameObject go = new GameObject(sprite.name, typeof(RectTransform), typeof(CanvasRenderer),
+                    typeof(Image));
                 go.transform.SetParent(transform, false);
 
                 Image image = go.GetComponent<Image>();
@@ -68,6 +74,7 @@ namespace Cadi.Scripts.UI.Extensions
             m_Loop = true;
             m_Coroutine = StartCoroutine(RevealRoutine());
         }
+
         private void StopAnim(bool force)
         {
             if (force)
@@ -75,8 +82,8 @@ namespace Cadi.Scripts.UI.Extensions
                 foreach (var t in m_Images)
                     t.enabled = false;
             }
-            
-            if(m_Coroutine != null)
+
+            if (m_Coroutine != null)
                 StopCoroutine(m_Coroutine);
         }
 
@@ -86,15 +93,17 @@ namespace Cadi.Scripts.UI.Extensions
             {
                 foreach (var t in m_Images)
                     t.enabled = false;
-                
+
                 foreach (var t in m_Images)
                 {
                     yield return new WaitForSeconds(m_Delay);
                     t.enabled = true;
                 }
+
                 yield return new WaitForSeconds(m_Delay);
             }
-            m_Coroutine  = null;
+
+            m_Coroutine = null;
         }
     }
 }

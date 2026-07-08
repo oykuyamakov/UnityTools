@@ -3,7 +3,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEditor.Build;
 
-namespace Cadi.Scripts.Editor
+namespace Cadi.Scripts.Utility.Editor
 {
     [InitializeOnLoad]
     public static class CadiDotweenDefineSetter

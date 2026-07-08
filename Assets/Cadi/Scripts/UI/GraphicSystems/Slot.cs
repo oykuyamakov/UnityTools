@@ -128,8 +128,6 @@ namespace Cadi.Scripts.UI.GraphicSystems
         // -----------------------------------------------------------
         // Properties
         // -----------------------------------------------------------
-
-     
         public override Color DefaultColor
         {
             get => m_DefaultColor;

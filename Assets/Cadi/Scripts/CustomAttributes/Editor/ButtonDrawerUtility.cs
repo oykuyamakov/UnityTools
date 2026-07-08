@@ -22,64 +22,105 @@ namespace Cadi.Scripts.CustomAttributes.Editor
             typeof(Vector4),
             typeof(Color),
         };
+        
+        private sealed class ButtonBinding
+        {
+            public MethodInfo Method;
+            public ButtonAttribute Attr;
+            public ParameterInfo[] Parameters;
+            public string Label;
+        }
+
+        private static readonly Dictionary<Type, List<ButtonBinding>> s_ButtonCache = new();
+
+        private static List<ButtonBinding> GetButtonsForType(Type type)
+        {
+            if (s_ButtonCache.TryGetValue(type, out var cached))
+                return cached;
+
+            var list = new List<ButtonBinding>();
+
+            // Walk the hierarchy with DeclaredOnly so private [Button] methods on
+            // base classes are found too (GetMethods(NonPublic) misses them) —
+            // same reasoning as GetBindingsForType in CacherMonoBehaviour.
+            const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public |
+                                       BindingFlags.NonPublic | BindingFlags.DeclaredOnly;
+
+            var seen = new HashSet<string>();
+            Type cur = type;
+            while (cur != null && cur != typeof(MonoBehaviour) && cur != typeof(ScriptableObject) && cur != typeof(object))
+            {
+                foreach (var m in cur.GetMethods(flags))
+                {
+                    if (m.IsGenericMethodDefinition)
+                        continue; // can't invoke without type args
+
+                    var attr = m.GetCustomAttribute<ButtonAttribute>();
+                    if (attr == null)
+                        continue;
+
+                    if (!seen.Add(m.Name + m.GetParameters().Length)) // overridden methods: keep most-derived
+                        continue;
+
+                    list.Add(new ButtonBinding
+                    {
+                        Method = m,
+                        Attr = attr,
+                        Parameters = m.GetParameters(),
+                        Label = string.IsNullOrEmpty(attr.Label)
+                            ? ObjectNames.NicifyVariableName(m.Name)
+                            : attr.Label
+                    });
+                }
+                cur = cur.BaseType;
+            }
+
+            s_ButtonCache[type] = list; // empty list cached too — that's the fast early-out
+            return list;
+        }
 
         public static void DrawButtons(UnityEditor.Editor editor)
         {
             var targetObj = editor.target;
             if (targetObj == null)
-            {
                 return;
-            }
 
-            var targetType = targetObj.GetType();
-            var methods = targetType.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            var buttons = GetButtonsForType(targetObj.GetType());
+            if (buttons.Count == 0)
+                return; // ← the common case, now one dictionary hit
 
-            foreach (var method in methods)
+            foreach (var b in buttons)
             {
-                var buttonAttr = method.GetCustomAttribute<ButtonAttribute>();
-                if (buttonAttr == null)
-                    continue;
-
-
-                var label = string.IsNullOrEmpty(buttonAttr.Label)
-                    ? ObjectNames.NicifyVariableName(method.Name)
-                    : buttonAttr.Label;
-
-                var parameters = method.GetParameters();
-
-                if (parameters.Length == 0)
+                if (b.Parameters.Length == 0)
                 {
-                    if (GUILayout.Button(label))
-                    {
-                        InvokeOnAllTargets(editor, method, Array.Empty<object>());
-                    }
-
+                    if (GUILayout.Button(b.Label))
+                        InvokeOnAllTargets(editor, b.Method, Array.Empty<object>());
                     continue;
                 }
 
                 using (new EditorGUILayout.VerticalScope(GUI.skin.box))
                 {
-                    EditorGUILayout.LabelField(label, EditorStyles.boldLabel);
+                    EditorGUILayout.LabelField(b.Label, EditorStyles.boldLabel);
 
-                    if (!TryDrawParameterFields(targetType, method, parameters, out var args))
+                    if (!TryDrawParameterFields(targetObj.GetType(), b.Method, b.Parameters, out var args))
                     {
                         EditorGUILayout.HelpBox(
-                            $"[button] unsupported parameter type(s) on method: {method.Name}",
+                            $"[button] unsupported parameter type(s) on method: {b.Method.Name}",
                             MessageType.Warning);
-
                         continue;
                     }
-                    
+
                     using (new EditorGUI.DisabledScope(editor.targets == null || editor.targets.Length == 0))
                     {
                         if (GUILayout.Button("Run"))
-                        {
-                            InvokeOnAllTargets(editor, method, args);
-                        }
+                            InvokeOnAllTargets(editor, b.Method, args);
                     }
                 }
             }
         }
+        
+        [UnityEditor.Callbacks.DidReloadScripts]
+        private static void ClearCache() => s_ButtonCache.Clear();
 
         private static void InvokeOnAllTargets(UnityEditor.Editor editor, MethodInfo method, object[] args)
         {

@@ -3,7 +3,7 @@ using Cadi.Scripts.CacherSystem;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Cadi.Scripts.UI.Extensions
+namespace Cadi.Scripts.UI.Helpers
 {
     [RequireComponent(typeof(Image))]
     public sealed class RadialSpriteSetter : CacherMonoBehaviour

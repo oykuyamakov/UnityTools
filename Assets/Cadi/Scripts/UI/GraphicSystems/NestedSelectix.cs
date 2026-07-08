@@ -7,7 +7,7 @@ using UnityEngine.EventSystems;
 
 namespace Cadi.Scripts.UI.GraphicSystems
 {
-    public class NestedSelectiveGraphix : NestedGraphix, IPointerDownHandler, ISelectiveGraphix
+    public class NestedSelectix : NestedGraphix, IPointerDownHandler, ISelectix
     {
         [SerializeField]
 #if ODIN_INSPECTOR
@@ -71,7 +71,7 @@ namespace Cadi.Scripts.UI.GraphicSystems
         //     m_Selection.SlotVis(GetSelectiveSlot(mode), vis);
         // }
 
-        public void SetGroup(int runtimeId, SelectiveGraphixGroup group)
+        public void SetGroup(int runtimeId, SelectixGroup group)
         {
             m_Selection.SetGroup(runtimeId, group);
 
@@ -82,7 +82,7 @@ namespace Cadi.Scripts.UI.GraphicSystems
             => m_Selection.BindToGraphix(this);
 
 
-        public void EditorBind(SelectiveGraphixGroup group)
+        public void EditorBind(SelectixGroup group)
         {
             if (group == null)
             {
@@ -125,7 +125,7 @@ namespace Cadi.Scripts.UI.GraphicSystems
 
             var parent = transform.parent;
 
-            if (parent != null && parent.TryGetComponent(out SelectiveGraphixGroup group))
+            if (parent != null && parent.TryGetComponent(out SelectixGroup group))
             {
                 EditorBind(group);
                 return group.AllowOverridenChildren;

@@ -1,8 +1,8 @@
 using UnityEngine;
 
-namespace CadiKazani.Scripts.Utility.GameObjectHelpers
+namespace Cadi.Scripts.Utility.GameObjectHelpers
 {
-    public class TransformPerserver : MonoBehaviour
+    public class TransformPreserver : MonoBehaviour
     {
         [System.Flags]
         public enum PerserveMode

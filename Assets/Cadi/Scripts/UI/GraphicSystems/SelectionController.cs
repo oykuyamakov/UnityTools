@@ -27,7 +27,7 @@ namespace Cadi.Scripts.UI.GraphicSystems
         private UIFxType m_FxBackground;
         
         [SerializeField] 
-        private SelectiveGraphixGroup m_Group;
+        private SelectixGroup m_Group;
         
         // -----------------------------------------------------------
         // Runtime state (non-serialized)
@@ -41,14 +41,14 @@ namespace Cadi.Scripts.UI.GraphicSystems
         [NonSerialized]
         private RectTransform m_OwnerRT;
         [NonSerialized]
-        private UIEffectPooler m_Pooler;
+        private UIFXPooler m_Pooler;
         
         [NonSerialized]
         private FXGraphix m_ActiveFxBg;
         [NonSerialized]
         private FXGraphix m_ActiveFxFg;
         
-        private ISelectiveGraphix m_Owner;
+        private ISelectix m_Owner;
         
         private bool m_ExposeSettings = false;
 
@@ -60,7 +60,7 @@ namespace Cadi.Scripts.UI.GraphicSystems
         public bool IsSelected => m_Selected;
         public bool IsLocked => m_Locked;
         public bool GroupSet => m_Group != null;
-        public SelectiveGraphixGroup Group => m_Group;
+        public SelectixGroup Group => m_Group;
 
         public bool MultiSelectable
         {
@@ -197,7 +197,7 @@ namespace Cadi.Scripts.UI.GraphicSystems
         // Group integration
         // -----------------------------------------------------------
 
-        public void SetGroup(int runtimeId, SelectiveGraphixGroup group)
+        public void SetGroup(int runtimeId, SelectixGroup group)
         {
             if (GroupSet && m_Group != group)
             {
@@ -218,14 +218,14 @@ namespace Cadi.Scripts.UI.GraphicSystems
             Subscribe();
         }
 
-        public void BindToGraphix(ISelectiveGraphix owner)
+        public void BindToGraphix(ISelectix owner)
         {
             m_Owner = owner;
-            m_Pooler = UIEffectPooler.Instance;
+            m_Pooler = UIFXPooler.Instance;
             m_OwnerRT = m_Owner.CachedRectTransform;
         }
 
-        public void EditorBind(SelectiveGraphixGroup group)
+        public void EditorBind(SelectixGroup group)
         {
             m_Group = group;
 
@@ -244,7 +244,7 @@ namespace Cadi.Scripts.UI.GraphicSystems
 
         private void OnOtherSelected(SGraphixSelectedEvent evt)
         {
-            if (evt.SelectiveGraphix != null && evt.SelectiveGraphix == m_Owner)
+            if (evt.Selectix != null && evt.Selectix == m_Owner)
                 return;
 
             if (m_Locked)
